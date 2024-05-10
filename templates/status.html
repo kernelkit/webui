@@ -1,0 +1,135 @@
+<script>
+    function makeClickable(text) {
+	const urlRegex = /(https?:\/\/[^\s]+)|(mailto:[^\s]+)/g;
+	return text.replace(urlRegex, function(url) {
+	    return `<a href="${url}" target="_blank">${url}</a>`;
+	});
+    }
+</script>
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+
+  <div class="col w-50">
+    <div class="card">
+      <div class="card-header">
+        System Information
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th scope="row">Hostname</th>
+              <td>{{ hostname }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Model</th>
+              <td>{{ model }}</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Chipset</th>
+              <td>{{ cpu_chipset }}</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Frequency</th>
+              <td>{{ cpu_frequency }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Internal Storage</th>
+              <td>{{ disk.formatted }} GB</td>
+            </tr>
+            <tr>
+              <th scope="row">Current Time</th>
+              <td>{{ current_time }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Uptime</th>
+              <td>{{ uptime }}</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Usage</th>
+              <td>{{ cpu_usage }}%</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Load <small>(1/5/15 mins)</small></th>
+              <td>{{ load_average[0] }} / {{ load_average[1] }} / {{ load_average[2] }}</td>
+            </tr>
+	    <tr>
+	      <th scope="row">Memory Usage</th>
+	      <td>
+		{{ memory.formatted }}
+		<div class="progress">
+		  <div class="progress-bar" role="progressbar" style="width: {{ memory.percent }}%" aria-valuenow="{{ memory.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+		</div>
+	      </td>
+	    </tr>
+	    <tr>
+	      <th scope="row">Disk Storage</th>
+	      <td>
+		{{ disk.formatted }}
+		<div class="progress">
+		  <div class="progress-bar" role="progressbar" style="width: {{ disk.percent }}%" aria-valuenow="{{ disk.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+		</div>
+	      </td>
+	    </tr>
+            <tr>
+              <th scope="row">CPU Temperature</th>
+              <td>{{ cpu_temperature }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col w-50">
+    <div class="card">
+      <div class="card-header">Version Information</div>
+      <div class="card-body">
+        <table class="table table-hover">
+	  {% for key, value in version_info.items() %}
+	  <tr>
+	    <td><strong>{{ key }}</strong></td>
+	    <td id="value-{{ loop.index }}">{{ value }}</td>
+            <script>
+              document.getElementById('value-{{ loop.index }}').innerHTML = makeClickable(document.getElementById('value-{{ loop.index }}').textContent);
+            </script>
+	  </tr>
+	  {% endfor %}
+	</table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col w-100">
+    <div class="card">
+      <div class="card-header">Network Interfaces</div>
+      <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Interface</th>
+                    <th style="width:5em;">Status</th>
+                    <th>Addresses</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for iface in interfaces %}
+                <tr>
+                    <td>{{ iface.ifname }}</td>
+                    <td style="width:5em;" class="{{ 'bg-success' if iface.operstate == 'UP' else 'bg-danger' }}">
+                        {{ iface.operstate }}
+                    </td>
+                    <td>
+                        {% for addr in iface.addr_info %}
+                            <div>{{ addr.local }}/{{ addr.prefixlen }}</div>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
