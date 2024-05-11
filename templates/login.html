@@ -31,6 +31,21 @@
         vertical-align: bottom;
       }
 
+      .theme-switcher {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	z-index: 1050;
+      }
+      .theme-switcher .btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+      }
+      .theme-switcher .bi {
+	transition: all 0.3s;
+      }
+
       /* Override browser autofill styles */
       input:-webkit-autofill,
       input:-webkit-autofill:hover,
@@ -65,18 +80,67 @@
                 <button type="submit" class="btn btn-primary w-100">Login</button>
             </form>
         </div>
+
+	<div class="theme-switcher">
+	  <input type="checkbox" id="themeToggle" class="btn-check">
+	  <label class="btn btn-outline-secondary" for="themeToggle" title="Toggle theme">
+            <i class="bi bi-moon-stars"></i>
+            <i class="bi bi-sun d-none"></i>
+	  </label>
+	</div>
+
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        function updateTheme() {
-          const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          document.documentElement.setAttribute('data-bs-theme', theme);
-        }
+	const themeToggle = document.getElementById('themeToggle');
+	const sunIcon = document.querySelector('.theme-switcher .bi-sun');
+	const moonIcon = document.querySelector('.theme-switcher .bi-moon-stars');
 
-        const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        themeMediaQuery.addEventListener('change', updateTheme);
-        updateTheme(); // Initial theme check
+	function updateIcons(isDark) {
+	  if (isDark) {
+	    sunIcon.classList.remove('d-none');
+	    moonIcon.classList.add('d-none');
+	  } else {
+	    sunIcon.classList.add('d-none');
+	    moonIcon.classList.remove('d-none');
+	  }
+	}
+
+	const currentTheme = localStorage.getItem('theme') || 'light';
+	if (currentTheme === 'dark') {
+	  document.documentElement.setAttribute('data-bs-theme', 'dark');
+	  themeToggle.checked = true;
+	  updateIcons(true);
+	} else {
+	  updateIcons(false);
+	}
+
+	themeToggle.addEventListener('change', function() {
+	  if (this.checked) {
+	    document.documentElement.setAttribute('data-bs-theme', 'dark');
+	    localStorage.setItem('theme', 'dark');
+	    updateIcons(true);
+	  } else {
+	    document.documentElement.setAttribute('data-bs-theme', 'light');
+	    localStorage.setItem('theme', 'light');
+	    updateIcons(false);
+	  }
+	});
+
+	function updateTheme() {
+	  const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	  document.documentElement.setAttribute('data-bs-theme', theme);
+	  themeToggle.checked = (theme === 'dark');
+	  updateIcons(theme === 'dark');
+	}
+
+	const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+	themeMediaQuery.addEventListener('change', function() {
+	  updateTheme();
+	});
+
+	updateTheme();
       });
     </script>
 </body>
