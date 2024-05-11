@@ -17,9 +17,9 @@ app.permanent_session_lifetime = timedelta(minutes=10)
 @app.route('/')
 def index():
     session.permanent = True  # This ensures the session timeout is refreshed
-    if not session.get('logged_in'):
+    if not session.get('logged_in') or not session.get('username'):
         return render_template('login.html')
-    return render_template('main.html')
+    return render_template('main.html', username=session.get('username'))
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -28,6 +28,7 @@ def login():
     password = request.form['password']
     if username == 'admin' and password == 'admin':
         session['logged_in'] = True
+        session['username'] = username
     else:
         flash('Login failed! Incorrect username or password.')
     return redirect(url_for('index'))
@@ -35,6 +36,8 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
+    session.pop('username', None)
+
     return redirect(url_for('index'))
 
 @app.route('/keepalive')
