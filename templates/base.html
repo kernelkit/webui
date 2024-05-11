@@ -253,44 +253,53 @@
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-	function applySystemTheme() {
-          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          document.documentElement.setAttribute('data-bs-theme', systemTheme);
-	}
+	  function applySystemTheme() {
+	      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	      document.documentElement.setAttribute('data-bs-theme', systemTheme);
+	      localStorage.setItem('theme', systemTheme); // Store the system theme in localStorage
+	  }
 
-	var themeButtons = document.querySelectorAll('[data-bs-theme-value]');
-	themeButtons.forEach(function(button) {
-          button.addEventListener('click', function() {
-            var theme = button.getAttribute('data-bs-theme-value');
-            if (theme === 'auto') {
-              applySystemTheme();
-            } else {
-              document.documentElement.setAttribute('data-bs-theme', theme);
-            }
-            updateActiveThemeButton(themeButtons, button);
-          });
-	});
+	  function applyTheme(theme) {
+	      document.documentElement.setAttribute('data-bs-theme', theme);
+	      localStorage.setItem('theme', theme); // Store the chosen theme in localStorage
+	  }
 
-	// Function to update UI of active theme button
-	function updateActiveThemeButton(buttons, activeButton) {
-          buttons.forEach(function(btn) {
-            btn.classList.remove('active');
-            var checkIcon = btn.querySelector('.bi.ms-auto');
-            if (checkIcon) {
-              checkIcon.classList.add('d-none');
-            }
-          });
-          activeButton.classList.add('active');
-          var activeCheckIcon = activeButton.querySelector('.bi.ms-auto');
-          if (activeCheckIcon) {
-            activeCheckIcon.classList.remove('d-none');
-          }
-	}
+	  var themeButtons = document.querySelectorAll('[data-bs-theme-value]');
+	  themeButtons.forEach(function(button) {
+	      button.addEventListener('click', function() {
+		  var theme = button.getAttribute('data-bs-theme-value');
+		  if (theme === 'auto') {
+		      applySystemTheme();
+		  } else {
+		      applyTheme(theme);
+		  }
+		  updateActiveThemeButton(themeButtons, button);
+	      });
+	  });
 
-	// Apply system theme on load if 'auto' is set
-	if (document.documentElement.getAttribute('data-bs-theme') === 'auto') {
-          applySystemTheme();
-	}
+	  // Function to update UI of active theme button
+	  function updateActiveThemeButton(buttons, activeButton) {
+	      buttons.forEach(function(btn) {
+		  btn.classList.remove('active');
+		  var checkIcon = btn.querySelector('.bi.ms-auto');
+		  if (checkIcon) {
+		      checkIcon.classList.add('d-none');
+		  }
+	      });
+	      activeButton.classList.add('active');
+	      var activeCheckIcon = activeButton.querySelector('.bi.ms-auto');
+	      if (activeCheckIcon) {
+		  activeCheckIcon.classList.remove('d-none');
+	      }
+	  }
+
+	  // Check if there's a stored theme preference in localStorage and apply it
+	  var storedTheme = localStorage.getItem('theme') || 'auto'; // Default to 'auto' if nothing is stored
+	  if (storedTheme === 'auto') {
+	      applySystemTheme();
+	  } else {
+	      applyTheme(storedTheme);
+	  }
       });
     </script>
 

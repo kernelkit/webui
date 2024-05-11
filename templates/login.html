@@ -91,48 +91,33 @@
 
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+
     <script>
       document.addEventListener('DOMContentLoaded', function() {
 	const themeToggle = document.getElementById('themeToggle');
-	const sunIcon = document.querySelector('.theme-switcher .bi-sun');
-	const moonIcon = document.querySelector('.theme-switcher .bi-moon-stars');
+	const currentTheme = localStorage.getItem('theme') || 'light'; // Default to light theme if nothing is stored
 
-	function updateIcons(isDark) {
-	  if (isDark) {
-	    sunIcon.classList.remove('d-none');
-	    moonIcon.classList.add('d-none');
-	  } else {
-	    sunIcon.classList.add('d-none');
-	    moonIcon.classList.remove('d-none');
-	  }
-	}
+	// Apply the current theme on initial load
+	document.documentElement.setAttribute('data-bs-theme', currentTheme);
+	themeToggle.checked = (currentTheme === 'dark');
 
-	const currentTheme = localStorage.getItem('theme') || 'light';
-	if (currentTheme === 'dark') {
-	  document.documentElement.setAttribute('data-bs-theme', 'dark');
-	  themeToggle.checked = true;
-	  updateIcons(true);
-	} else {
-	  updateIcons(false);
-	}
-
+	// Listen for changes in the toggle switch
 	themeToggle.addEventListener('change', function() {
 	  if (this.checked) {
 	    document.documentElement.setAttribute('data-bs-theme', 'dark');
 	    localStorage.setItem('theme', 'dark');
-	    updateIcons(true);
 	  } else {
 	    document.documentElement.setAttribute('data-bs-theme', 'light');
 	    localStorage.setItem('theme', 'light');
-	    updateIcons(false);
 	  }
 	});
 
+	// Optional: Handle system theme changes if you want to keep supporting the 'auto' mode
 	function updateTheme() {
 	  const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 	  document.documentElement.setAttribute('data-bs-theme', theme);
 	  themeToggle.checked = (theme === 'dark');
-	  updateIcons(theme === 'dark');
+	  localStorage.setItem('theme', theme); // Store theme change
 	}
 
 	const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -140,8 +125,12 @@
 	  updateTheme();
 	});
 
-	updateTheme();
+	// Apply theme based on the system preferences initially if 'auto' is chosen
+	if (localStorage.getItem('theme') === 'auto' || !localStorage.getItem('theme')) {
+	  updateTheme();
+	}
       });
     </script>
+
 </body>
 </html>
