@@ -120,14 +120,49 @@
 	flex-grow: 1;
         z-index: 1;
         padding: 10px;
-        margin-left: 150px;
+        /* margin-left: 150px; */
       }
 
       .bottom-nav-item {
         margin-top: auto;
 	padding-bottom: 0px;
       }
+      /* CSS to ensure sidebar is always visible on larger screens */
+      @media (min-width: 992px) { /* Adjust this breakpoint as needed */
+	.container-xxl {
+	  --bs-gutter-x: 0;  /* Removes horizontal gutters on large screens */
+	}
+	.offcanvas {
+	  position: fixed;  /* Fixed positioning to keep it in place */
+	  top: 74px;  /* Assuming your navbar is 74px high */
+	  left: 0;  /* Ensure the sidebar starts exactly from the left edge */
+	  bottom: 0;  /* Stretch to the bottom of the viewport */
+	  width: 250px;  /* Or whatever width you prefer */
+	  height: calc(100vh - 74px);  /* Adjust height taking into account the navbar */
+	}
+	#bdSidebar {
+	  position: static; /* Reset position for large screens */
+	  width: 250px; /* Set a fixed width or percentage as needed */
+	  max-width: 100%; /* Ensures the sidebar doesn't exceed its container */
+	  transform: none !important; /* Override any transform from offcanvas */
+	  visibility: visible !important; /* Ensure sidebar is always visible */
+          background-color: var(--sidebar-bg);
+	}
+	#bdSidebar .offcanvas-header {
+	  display: none; /* Hide the header with the title and close button */
+	}
+	#bdSidebar .offcanvas-body {
+	  padding-top: 0; /* Adjust padding if the header was adding extra space */
+	  left: 0;
+	}
 
+	.offcanvas-backdrop {
+	  display: none; /* Hide the backdrop on larger screens */
+	}
+	.offcanvas.show {
+	  transform: none; /* Cancel any transformation when shown */
+	}
+      }
     </style>
   </head>
   <body>
@@ -184,70 +219,70 @@
     </header>
 
     <div class="container-xxl">
-      <div class="sidebar">
-      <div class="sidebar-content">
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#" id="status">
-              <i class="bi bi-speedometer2 me-2"></i>Status
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="config">
-              <i class="bi bi-gear me-2"></i>Configuration
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#" id="upgrade">
-              <i class="bi bi-arrow-up-square me-2"></i>Upgrade
-            </a>
-          </li>
-        </ul>
-      </div>
-      <div class="bottom-nav-item d-lg-none">
-        <hr>
 
-        <ul class="nav flex-column">
-	  <li class="nav-item dropdown-toggle" type="button" id="bd-drop-profile" data-bs-toggle="dropdown" aria-expanded="false">
-	    <i class="bi bi-person me-2"></i>{{ username }}
-	  </li>
-	  <ul class="dropdown-menu" aria-labelledby="bd-drop-profile">
-
-	    <li>
-              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
-		<i class="bi bi-sun me-2"></i>Light
-		<i class="bi bi-check2 ms-auto d-none"></i>
-              </button>
+      <div class="offcanvas offcanvas-start" tabindex="-1" id="bdSidebar" aria-labelledby="bdSidebarLabel">
+	<div class="offcanvas-header">
+	  <h5 class="offcanvas-title" id="bdSidebarLabel">Menu</h5>
+	  <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+	</div>
+	<div class="offcanvas-body">
+	  <ul class="nav flex-column">
+	    <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#" id="status">
+		<i class="bi bi-speedometer2 me-2"></i>Status
+              </a>
 	    </li>
-	    <li>
-              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
-		<i class="bi bi-moon-stars me-2"></i>Dark
-		<i class="bi bi-check2 ms-auto d-none"></i>
-              </button>
+	    <li class="nav-item">
+              <a class="nav-link" href="#" id="config">
+		<i class="bi bi-gear me-2"></i>Configuration
+              </a>
 	    </li>
-	    <li>
-              <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
-		<i class="bi bi-circle-half me-2"></i>Auto
-		<i class="bi bi-check2 ms-auto d-none"></i>
-              </button>
-	    </li>
-
-	    <li><hr class="dropdown-divider"></li>
-
-	    <li>
-	      <a class="dropdown-item" id="logout" href="#">
-		<i class="bi bi-box-arrow-right me-2"></i>Logout
-	      </a>
+	    <li class="nav-item">
+              <a class="nav-link" href="#" id="upgrade">
+		<i class="bi bi-arrow-up-square me-2"></i>Upgrade
+              </a>
 	    </li>
 	  </ul>
-        </ul>
-
+	  <div class="bottom-nav-item d-lg-none">
+	    <hr>
+	    <ul class="nav flex-column">
+              <li class="nav-item dropdown-toggle" type="button" id="bd-drop-profile" data-bs-toggle="dropdown" aria-expanded="false">
+		<i class="bi bi-person me-2"></i>{{ username }}
+              </li>
+              <ul class="dropdown-menu" aria-labelledby="bd-drop-profile">
+		<li>
+		  <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+		    <i class="bi bi-sun me-2"></i>Light
+		    <i class="bi bi-check2 ms-auto d-none"></i>
+		  </button>
+		</li>
+		<li>
+		  <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+		    <i class="bi bi-moon-stars me-2"></i>Dark
+		    <i class="bi bi-check2 ms-auto d-none"></i>
+		  </button>
+		</li>
+		<li>
+		  <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
+		    <i class="bi bi-circle-half me-2"></i>Auto
+		    <i class="bi bi-check2 ms-auto d-none"></i>
+		  </button>
+		</li>
+		<li><hr class="dropdown-divider"></li>
+		<li>
+		  <a class="dropdown-item" id="logout" href="#">
+		    <i class="bi bi-box-arrow-right me-2"></i>Logout
+		  </a>
+		</li>
+              </ul>
+	    </ul>
+	  </div>
+	</div>
       </div>
-    </div>
 
-    <div class="main-content" id="content">
-      <!-- Dynamic content gets loaded here -->
-    </div>
+      <div class="main-content" id="content">
+	<!-- Dynamic content gets loaded here -->
+      </div>
     </div><!-- container-xxl -->
 
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
