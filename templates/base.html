@@ -10,6 +10,7 @@
       :root[data-bs-theme="light"] {
 	--navbar-bg: #f8f9fa;
 	--navbar-text: #343a40;
+	--navbar-shadow: rgba(0, 0, 0, 0.1);
 	--sidebar-bg: #f8f9fa;
 	--sidebar-color: #333;
 	--icon-color: #333;
@@ -20,15 +21,18 @@
       }
 
       :root[data-bs-theme="dark"] {
-	--navbar-bg: #343a40;
+	--navbar-bg: #24292f;
 	--navbar-text: #f8f9fa;
-	--sidebar-bg: #343a40;
+	--navbar-shadow: rgba(255, 255, 255, 0.1);
+	--sidebar-bg: #24292f;
 	--sidebar-color: #ccc;
 	--icon-color: #ccc;
 	--link-hover-bg: #0062cc;
 	--link-hover-color: #e2e6ea;
 	--link-active-bg: #343a40;
 	--link-active-color: #72abff;
+	--bg-danger-text-color: #000;
+	--bg-success-text-color: #000;
       }
 
       body {
@@ -36,6 +40,15 @@
 	min-height: 100vh;
       }
 
+      .bg-danger, .table .bg-danger {
+	color: var(--bg-danger-text-color, #fff);
+	background-color: #dc3545;
+      }
+
+      .bg-success, .table .bg-success {
+	color: var(--bg-success-text-color, #fff);
+	background-color: #28a745;
+      }
       .container-xxl {
 	display: flex;
 	flex-wrap: nowrap;
@@ -51,6 +64,7 @@
         left: 0;
         z-index: 1100;
         padding-top: 10px;
+	overflow-y: auto;  // Allows scrolling inside the sidebar if needed
         box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
         display: flex;
         flex-direction: column;
@@ -67,8 +81,7 @@
 	background-color: var(--navbar-bg);
 	color: var(--navbar-text);
 	z-index: 1000;
-	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-	/* box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15), inset 0 -1px 0 rgba(255,255,255,0.15); */
+	box-shadow: 0 4px 6px -1px var(--navbar-shadow);
       }
       .navbar-brand img {
 	height: 48px;
@@ -92,6 +105,9 @@
 	fill: currentColor;
       }
 
+      .nav-item {
+	padding-left: 10px;
+      }
       .nav-link {
         font-weight: 500;
 	color: var(--sidebar-color);
@@ -121,7 +137,6 @@
 	flex-grow: 1;
         z-index: 1;
         padding: 10px;
-        /* margin-left: 150px; */
       }
 
       .bottom-nav-item {
@@ -138,12 +153,19 @@
 	  top: 74px;  /* Assuming your navbar is 74px high */
 	  left: 0;  /* Ensure the sidebar starts exactly from the left edge */
 	  bottom: 0;  /* Stretch to the bottom of the viewport */
-	  width: 250px;  /* Or whatever width you prefer */
+	  width: 190px;  /* Or whatever width you prefer */
 	  height: calc(100vh - 74px);  /* Adjust height taking into account the navbar */
 	}
+	.main-content {
+	  margin-left: 190px;
+          flex-grow: 1;
+          padding: 10px;
+          overflow: hidden;
+	}
 	#bdSidebar {
-	  position: static; /* Reset position for large screens */
-	  width: 250px; /* Set a fixed width or percentage as needed */
+	  position: fixed; /* Reset position for large screens */
+	  top: 74px;
+	  width: 190px; /* Set a fixed width or percentage as needed */
 	  max-width: 100%; /* Ensures the sidebar doesn't exceed its container */
 	  transform: none !important; /* Override any transform from offcanvas */
 	  visibility: visible !important; /* Ensure sidebar is always visible */
@@ -227,6 +249,7 @@
 	  <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 	</div>
 	<div class="offcanvas-body">
+	  <hr>
 	  <ul class="nav flex-column">
 	    <li class="nav-item">
               <a class="nav-link active" aria-current="page" href="#" id="status">
