@@ -1,307 +1,307 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
-<head>
+  <head>
     <meta charset="UTF-8">
     <title>Web Management Interface</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
     <style>
-	:root[data-bs-theme="light"] {
-	  --sidebar-bg: #e9ecef;
-	  --sidebar-color: #333;
-	  --icon-color: #333;
-	  --link-hover-bg: #007bff;
-	  --link-hover-color: #fff;
-	  --link-active-bg: #e9ecef;
-	  --link-active-color: #0056b3;
-	}
+      :root[data-bs-theme="light"] {
+	--sidebar-bg: #e9ecef;
+	--sidebar-color: #333;
+	--icon-color: #333;
+	--link-hover-bg: #007bff;
+	--link-hover-color: #fff;
+	--link-active-bg: #e9ecef;
+	--link-active-color: #0056b3;
+      }
 
-	:root[data-bs-theme="dark"] {
-	  --sidebar-bg: #343a40;
-	  --sidebar-color: #ccc;
-	  --icon-color: #ccc;
-	  --link-hover-bg: #0062cc;
-	  --link-hover-color: #e2e6ea;
-	  --link-active-bg: #343a40;
-	  --link-active-color: #72abff;
-	}
+      :root[data-bs-theme="dark"] {
+	--sidebar-bg: #343a40;
+	--sidebar-color: #ccc;
+	--icon-color: #ccc;
+	--link-hover-bg: #0062cc;
+	--link-hover-color: #e2e6ea;
+	--link-active-bg: #343a40;
+	--link-active-color: #72abff;
+      }
 
-        body {
-            min-height: 100vh;
-            display: flex;
-        }
+      body {
+        min-height: 100vh;
+        display: flex;
+      }
 
-        .sidebar {
-            width: 200px;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 1000;
-            padding-top: 10px;
-            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-            display: flex;
-            flex-direction: column;
-            background-color: var(--sidebar-bg);
-	    padding: 20px;
-        }
+      .sidebar {
+        width: 200px;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        padding-top: 10px;
+        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        display: flex;
+        flex-direction: column;
+        background-color: var(--sidebar-bg);
+	padding: 20px;
+      }
 
-        .sidebar-logo img {
-            max-width: 100%; /* Ensures image does not exceed the sidebar */
-            height: auto;    /* Maintain aspect ratio */
-        }
+      .sidebar-logo img {
+        max-width: 100%; /* Ensures image does not exceed the sidebar */
+        height: auto;    /* Maintain aspect ratio */
+      }
 
-        .sidebar-content {
-            flex-grow: 1;
-            overflow-auto;
-        }
+      .sidebar-content {
+        flex-grow: 1;
+        overflow-auto;
+      }
 
-	.bi {
-            color: var(--icon-color);
-	}
-	.dropdown-menu .bi svg {
-            color: var(--icon-color);
-	    fill: currentColor;
-	}
+      .bi {
+        color: var(--icon-color);
+      }
+      .dropdown-menu .bi svg {
+        color: var(--icon-color);
+	fill: currentColor;
+      }
 
-        .nav-item {
-  	  padding-left: 10px;    /* Shift menu text and icons rightward */
-	}
-        .nav-link {
-            font-weight: 500;
-	    color: var(--sidebar-color);
-	    padding: .3rem;      /* Padding between menu items */
-	    display: flex;       /* Ensures the icon and text are aligned on the same line */
-	    align-items: center; /* Centers the items vertically */
-	    transition: background-color 0.3s, color 0.3s;
-        }
+      .nav-item {
+  	padding-left: 10px;    /* Shift menu text and icons rightward */
+      }
+      .nav-link {
+        font-weight: 500;
+	color: var(--sidebar-color);
+	padding: .3rem;      /* Padding between menu items */
+	display: flex;       /* Ensures the icon and text are aligned on the same line */
+	align-items: center; /* Centers the items vertically */
+	transition: background-color 0.3s, color 0.3s;
+      }
 
-        .nav-link .feather {
-            margin-right: 4px;
-            color: #727272;
-        }
+      .nav-link .feather {
+        margin-right: 4px;
+        color: #727272;
+      }
 
-        .nav-link.active {
-            color: var(--link-active-color);
-            background-color: var(--link-active-bg);
-        }
-        .nav-link:hover {
-            color: var(--link-hover-color);
-            background-color: var(--link-hover-bg);
-	    text-decoration: none;     /* Remove link underline on hover */
-	    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-	}
-        .main-content {
-            flex: 1;
-            z-index: 1;
-            padding: 20px;
-            margin-left: 240px;
-        }
+      .nav-link.active {
+        color: var(--link-active-color);
+        background-color: var(--link-active-bg);
+      }
+      .nav-link:hover {
+        color: var(--link-hover-color);
+        background-color: var(--link-hover-bg);
+	text-decoration: none;     /* Remove link underline on hover */
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+      .main-content {
+        flex: 1;
+        z-index: 1;
+        padding: 20px;
+        margin-left: 240px;
+      }
 
-        .bottom-nav-item {
-            margin-top: auto;
-	    padding-bottom: 0px;
-        }
+      .bottom-nav-item {
+        margin-top: auto;
+	padding-bottom: 0px;
+      }
 
     </style>
-</head>
-<body>
+  </head>
+  <body>
 
     <div class="sidebar">
-        <div class="sidebar-logo">
-          <img src="/static/logo.png" alt="Logotype">
-	  <hr> <!-- Separator after logo -->
-        </div>
-        <div class="sidebar-content">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#" id="status">
-                        <i class="bi bi-speedometer2 me-2"></i>Status
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" id="config">
-                        <i class="bi bi-gear me-2"></i>Configuration
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" id="upgrade">
-                      <i class="bi bi-arrow-up-square me-2"></i>Upgrade
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <div class="bottom-nav-item">
-          <hr>
+      <div class="sidebar-logo">
+        <img src="/static/logo.png" alt="Logotype">
+	<hr> <!-- Separator after logo -->
+      </div>
+      <div class="sidebar-content">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#" id="status">
+              <i class="bi bi-speedometer2 me-2"></i>Status
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="config">
+              <i class="bi bi-gear me-2"></i>Configuration
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="upgrade">
+              <i class="bi bi-arrow-up-square me-2"></i>Upgrade
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="bottom-nav-item">
+        <hr>
 
-          <ul class="nav flex-column">
-	    <li class="nav-item dropdown-toggle" type="button" id="bd-drop-profile" data-bs-toggle="dropdown" aria-expanded="false">
-	      <i class="bi bi-person me-2"></i>{{ username }}
+        <ul class="nav flex-column">
+	  <li class="nav-item dropdown-toggle" type="button" id="bd-drop-profile" data-bs-toggle="dropdown" aria-expanded="false">
+	    <i class="bi bi-person me-2"></i>{{ username }}
+	  </li>
+	  <ul class="dropdown-menu" aria-labelledby="bd-drop-profile">
+
+	    <li>
+              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+		<i class="bi bi-sun me-2"></i>Light
+		<i class="bi bi-check2 ms-auto d-none"></i>
+              </button>
 	    </li>
-	    <ul class="dropdown-menu" aria-labelledby="bd-drop-profile">
+	    <li>
+              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+		<i class="bi bi-moon-stars me-2"></i>Dark
+		<i class="bi bi-check2 ms-auto d-none"></i>
+              </button>
+	    </li>
+	    <li>
+              <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
+		<i class="bi bi-circle-half me-2"></i>Auto
+		<i class="bi bi-check2 ms-auto d-none"></i>
+              </button>
+	    </li>
 
-	      <li>
-                <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
-		  <i class="bi bi-sun me-2"></i>Light
-		  <i class="bi bi-check2 ms-auto d-none"></i>
-                </button>
-	      </li>
-	      <li>
-                <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
-		  <i class="bi bi-moon-stars me-2"></i>Dark
-		  <i class="bi bi-check2 ms-auto d-none"></i>
-                </button>
-	      </li>
-	      <li>
-                <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
-		  <i class="bi bi-circle-half me-2"></i>Auto
-		  <i class="bi bi-check2 ms-auto d-none"></i>
-                </button>
-	      </li>
+	    <li><hr class="dropdown-divider"></li>
 
-	      <li><hr class="dropdown-divider"></li>
+	    <li>
+	      <a class="dropdown-item" id="logout" href="#">
+		<i class="bi bi-box-arrow-right me-2"></i>Logout
+	      </a>
+	    </li>
+	  </ul>
+        </ul>
 
-	      <li>
-		<a class="dropdown-item" id="logout" href="#">
-		  <i class="bi bi-box-arrow-right me-2"></i>Logout
-		</a>
-	      </li>
-	    </ul>
-          </ul>
-
-        </div>
+      </div>
     </div>
 
     <div class="main-content" id="content">
-        <!-- Dynamic content gets loaded here -->
+      <!-- Dynamic content gets loaded here -->
     </div>
 
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
       $(document).ready(function() {
-	  let lastKeepAlive = Date.now();
-	  let timeoutId;
+	let lastKeepAlive = Date.now();
+	let timeoutId;
 
-	  loadPage('/status');
+	loadPage('/status');
 
-	  $('.nav-link').on('click', function() {
-              $('.nav-link').removeClass('active');  // Remove active from all nav-links
-              $(this).addClass('active');  // Add active to the clicked nav-link
+	$('.nav-link').on('click', function() {
+          $('.nav-link').removeClass('active');  // Remove active from all nav-links
+          $(this).addClass('active');  // Add active to the clicked nav-link
+	});
+
+        $('#status').click(function() {
+          loadPage('/status');
+        });
+        $('#config').click(function() {
+          loadPage('/config');
+        });
+        $('#upgrade').click(function() {
+          loadPage('/upgrade');
+        });
+        $('#logout').click(function() {
+          window.location.href = '/logout';
+        });
+
+	function loadPage(url) {
+	  console.log("Requesting URL:", url); // Logs the URL being requested
+
+	  $.ajax({
+	    url: url,
+	    type: 'GET',
+	    success: function(data) {
+	      console.log("Data received:", data); // Logs the data received from the server
+	      $('#content').html(data);
+	    },
+	    error: function(xhr, status, error) {
+	      console.error("Failed to fetch data:", xhr.responseText); // Logs error details
+	      console.error("Status:", status); // Logs the status of the error
+	      console.error("Error:", error); // Logs the error message
+	    }
 	  });
-	  
-          $('#status').click(function() {
-              loadPage('/status');
-          });
-          $('#config').click(function() {
-              loadPage('/config');
-          });
-          $('#upgrade').click(function() {
-              loadPage('/upgrade');
-          });
-          $('#logout').click(function() {
-              window.location.href = '/logout';
-          });
+	}
 
-	  function loadPage(url) {
-	      console.log("Requesting URL:", url); // Logs the URL being requested
+	function keepAlive() {
+	  fetch('/keepalive')
+	    .then(response => console.log("Session kept alive"))
+	    .catch(error => console.error("Error keeping session alive:", error));
+	}
 
-	      $.ajax({
-		  url: url,
-		  type: 'GET',
-		  success: function(data) {
-		      console.log("Data received:", data); // Logs the data received from the server
-		      $('#content').html(data);
-		  },
-		  error: function(xhr, status, error) {
-		      console.error("Failed to fetch data:", xhr.responseText); // Logs error details
-		      console.error("Status:", status); // Logs the status of the error
-		      console.error("Error:", error); // Logs the error message
-		  }
-	      });
-	  }
+	function resetTimer() {
+	  clearTimeout(timeoutId);
+	  timeoutId = setTimeout(() => {
+	    window.location.href = '/logout';
+	  }, 600000);
 
-	 function keepAlive() {
-	     fetch('/keepalive')
-		 .then(response => console.log("Session kept alive"))
-		 .catch(error => console.error("Error keeping session alive:", error));
-	 }
+          // Call keepAlive only if more than 60 seconds have passed
+          if (Date.now() - lastKeepAlive > 60000) {
+	    keepAlive();
+	    lastKeepAlive = Date.now();
+          }
+	}
 
-	 function resetTimer() {
-	     clearTimeout(timeoutId);
-	     timeoutId = setTimeout(() => {
-		 window.location.href = '/logout';
-	     }, 600000);
-
-             // Call keepAlive only if more than 60 seconds have passed
-             if (Date.now() - lastKeepAlive > 60000) {
-		 keepAlive();
-		 lastKeepAlive = Date.now();
-             }
-	 }
-
-	 window.onload = resetTimer;
-	 window.onmousemove = resetTimer;
-	 window.onmousedown = resetTimer;
-	 window.ontouchstart = resetTimer;
-	 window.onclick = resetTimer;
-	 window.onkeypress = resetTimer;
-	 window.addEventListener('scroll', resetTimer, true);
+	window.onload = resetTimer;
+	window.onmousemove = resetTimer;
+	window.onmousedown = resetTimer;
+	window.ontouchstart = resetTimer;
+	window.onclick = resetTimer;
+	window.onkeypress = resetTimer;
+	window.addEventListener('scroll', resetTimer, true);
 
       });
     </script>
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-	  function applySystemTheme() {
-	      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-	      document.documentElement.setAttribute('data-bs-theme', systemTheme);
-	      localStorage.setItem('theme', systemTheme); // Store the system theme in localStorage
-	  }
+	function applySystemTheme() {
+	  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	  document.documentElement.setAttribute('data-bs-theme', systemTheme);
+	  localStorage.setItem('theme', systemTheme); // Store the system theme in localStorage
+	}
 
-	  function applyTheme(theme) {
-	      document.documentElement.setAttribute('data-bs-theme', theme);
-	      localStorage.setItem('theme', theme); // Store the chosen theme in localStorage
-	  }
+	function applyTheme(theme) {
+	  document.documentElement.setAttribute('data-bs-theme', theme);
+	  localStorage.setItem('theme', theme); // Store the chosen theme in localStorage
+	}
 
-	  var themeButtons = document.querySelectorAll('[data-bs-theme-value]');
-	  themeButtons.forEach(function(button) {
-	      button.addEventListener('click', function() {
-		  var theme = button.getAttribute('data-bs-theme-value');
-		  if (theme === 'auto') {
-		      applySystemTheme();
-		  } else {
-		      applyTheme(theme);
-		  }
-		  updateActiveThemeButton(themeButtons, button);
-	      });
-	  });
-
-	  // Function to update UI of active theme button
-	  function updateActiveThemeButton(buttons, activeButton) {
-	      buttons.forEach(function(btn) {
-		  btn.classList.remove('active');
-		  var checkIcon = btn.querySelector('.bi.ms-auto');
-		  if (checkIcon) {
-		      checkIcon.classList.add('d-none');
-		  }
-	      });
-	      activeButton.classList.add('active');
-	      var activeCheckIcon = activeButton.querySelector('.bi.ms-auto');
-	      if (activeCheckIcon) {
-		  activeCheckIcon.classList.remove('d-none');
-	      }
-	  }
-
-	  // Check if there's a stored theme preference in localStorage and apply it
-	  var storedTheme = localStorage.getItem('theme') || 'auto'; // Default to 'auto' if nothing is stored
-	  if (storedTheme === 'auto') {
+	var themeButtons = document.querySelectorAll('[data-bs-theme-value]');
+	themeButtons.forEach(function(button) {
+	  button.addEventListener('click', function() {
+	    var theme = button.getAttribute('data-bs-theme-value');
+	    if (theme === 'auto') {
 	      applySystemTheme();
-	  } else {
-	      applyTheme(storedTheme);
+	    } else {
+	      applyTheme(theme);
+	    }
+	    updateActiveThemeButton(themeButtons, button);
+	  });
+	});
+
+	// Function to update UI of active theme button
+	function updateActiveThemeButton(buttons, activeButton) {
+	  buttons.forEach(function(btn) {
+	    btn.classList.remove('active');
+	    var checkIcon = btn.querySelector('.bi.ms-auto');
+	    if (checkIcon) {
+	      checkIcon.classList.add('d-none');
+	    }
+	  });
+	  activeButton.classList.add('active');
+	  var activeCheckIcon = activeButton.querySelector('.bi.ms-auto');
+	  if (activeCheckIcon) {
+	    activeCheckIcon.classList.remove('d-none');
 	  }
+	}
+
+	// Check if there's a stored theme preference in localStorage and apply it
+	var storedTheme = localStorage.getItem('theme') || 'auto'; // Default to 'auto' if nothing is stored
+	if (storedTheme === 'auto') {
+	  applySystemTheme();
+	} else {
+	  applyTheme(storedTheme);
+	}
       });
     </script>
 
-</body>
+  </body>
 </html>

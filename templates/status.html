@@ -1,10 +1,10 @@
 <script>
-    function makeClickable(text) {
-	const urlRegex = /(https?:\/\/[^\s]+)|(mailto:[^\s]+)/g;
-	return text.replace(urlRegex, function(url) {
-	    return `<a href="${url}" target="_blank">${url}</a>`;
-	});
-    }
+  function makeClickable(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)|(mailto:[^\s]+)/g;
+    return text.replace(urlRegex, function(url) {
+      return `<a href="${url}" target="_blank">${url}</a>`;
+    });
+  }
 </script>
 
 <div class="row row-cols-1 row-cols-md-2 g-4">
@@ -105,28 +105,28 @@
       <div class="card-header">Network Interfaces</div>
       <div class="card-body">
         <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Interface</th>
-                    <th style="width:5em;">Status</th>
-                    <th>Addresses</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for iface in interfaces %}
-                <tr>
-                    <td>{{ iface.ifname }}</td>
-                    <td style="width:5em;" class="{{ 'bg-success' if iface.operstate == 'UP' else 'bg-danger' }}">
-                        {{ iface.operstate }}
-                    </td>
-                    <td>
-                        {% for addr in iface.addr_info %}
-                            <div>{{ addr.local }}/{{ addr.prefixlen }}</div>
-                        {% endfor %}
-                    </td>
-                </tr>
+          <thead>
+            <tr>
+              <th>Interface</th>
+              <th style="width:5em;">Status</th>
+              <th>Addresses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for iface in interfaces %}
+            <tr>
+              <td>{{ iface.ifname }}</td>
+              <td style="width:5em;" class="{{ 'bg-success' if iface.operstate == 'UP' else 'bg-danger' }}">
+                {{ iface.operstate }}
+              </td>
+              <td>
+                {% for addr in iface.addr_info %}
+                <div>{{ addr.local }}/{{ addr.prefixlen }}</div>
                 {% endfor %}
-            </tbody>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
         </table>
       </div>
     </div>

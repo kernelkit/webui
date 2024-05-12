@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
-<head>
+  <head>
     <meta charset="UTF-8">
     <title>Login</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
@@ -56,38 +56,38 @@
         box-shadow: 0 0 0px 1000px var(--input-autofill) inset;
       }
     </style>
-</head>
-<body class="d-flex align-items-center vh-100">
+  </head>
+  <body class="d-flex align-items-center vh-100">
     <div class="container my-auto">
-        <div class="login-form">
-            <h2 class="text-center"><i class="bi bi-person-circle profile-icon me-2"></i>Login</h2>
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-danger">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            <form action="/login" method="post">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" value="admin" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required autofocus>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-            </form>
-        </div>
+      <div class="login-form">
+        <h2 class="text-center"><i class="bi bi-person-circle profile-icon me-2"></i>Login</h2>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <form action="/login" method="post">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" value="admin" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required autofocus>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+      </div>
 
-	<div class="theme-switcher">
-	  <input type="checkbox" id="themeToggle" class="btn-check">
-	  <label class="btn btn-outline-secondary" for="themeToggle" title="Toggle theme">
-            <i class="bi bi-moon-stars"></i>
-            <i class="bi bi-sun d-none"></i>
-	  </label>
-	</div>
+      <div class="theme-switcher">
+	<input type="checkbox" id="themeToggle" class="btn-check">
+	<label class="btn btn-outline-secondary" for="themeToggle" title="Toggle theme">
+          <i class="bi bi-moon-stars"></i>
+          <i class="bi bi-sun d-none"></i>
+	</label>
+      </div>
 
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
@@ -132,5 +132,5 @@
       });
     </script>
 
-</body>
+  </body>
 </html>
