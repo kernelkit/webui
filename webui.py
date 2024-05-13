@@ -174,18 +174,12 @@ def status():
     except Exception as e:
         version_info['ERROR'] = str(e)
 
-    # Get IP addresses and interface status
-    cmd = "ip -j -br addr"
-    result = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
-    interfaces = json.loads(result.stdout.decode('utf-8'))
-    interfaces.sort(key=sort_interfaces)
-
     return render_template('status.html',
                            hostname=hostname, model=model, cpu_chipset=cpu_chipset,
                            cpu_frequency=f"{cpu_frequency}", memory=memory_data, disk=disk_data,
                            cpu_usage=cpu_usage, load_average=load_average,
                            cpu_temperature=f"{cpu_temperature}", current_time=current_time,
-                           uptime=formatted_uptime, version_info=version_info, interfaces=interfaces)
+                           uptime=formatted_uptime, version_info=version_info)
 
 @app.route('/config')
 def config():
@@ -200,6 +194,27 @@ def log():
         return redirect(url_for('index'))
 
     return render_template('log.html')
+
+@app.route('/net')
+def net():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+
+    # Get IP addresses and interface status
+    cmd = "ip -j addr"
+    result = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+    interfaces = json.loads(result.stdout.decode('utf-8'))
+    interfaces.sort(key=sort_interfaces)
+
+    cmd = "ip -j route"
+    result = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+    routes4 = json.loads(result.stdout.decode('utf-8'))
+
+    cmd = "ip -j -6 route"
+    result = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+    routes6 = json.loads(result.stdout.decode('utf-8'))
+
+    return render_template('net.html', interfaces=interfaces, routes4=routes4, routes6=routes6)
 
 @app.route('/logs')
 def list_logs():

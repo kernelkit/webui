@@ -1,0 +1,113 @@
+<div class="row row-cols-1 row-cols-md-2 g-4">
+  <div class="col w-100">
+    <div class="card">
+      <div class="card-header">Interfaces</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Interface</th>
+              <th style="width:10em;">MAC</th>
+              <th style="width:5em;">Status</th>
+              <th>Addresses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for iface in interfaces %}
+            <tr>
+              <td>{{ iface.ifname }}</td>
+              <td style="width:10em;"">
+                {{ iface.address }}
+              </td>
+              <td style="width:5em;" class="{{ 'bg-success' if iface.operstate == 'UP' else 'bg-danger' }}">
+                {{ iface.operstate }}
+              </td>
+              <td>
+                {% for addr in iface.addr_info %}
+                <div>{{ addr.local }}/{{ addr.prefixlen }}</div>
+                {% endfor %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col w-100">
+    <div class="card">
+      <div class="card-header">IPv4 Routes</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Destination</th>
+              <th>Gateway</th>
+              <th>Protocol</th>
+              <th>Metric</th>
+              <th>Interface</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for route in routes4 %}
+            <tr>
+              <td>{{ route.dst }}</td>
+              <td>
+                {{ route.gateway }}
+              </td>
+              <td>
+                {{ route.protocol }}
+              </td>
+              <td>
+                {{ route.metric }}
+              </td>
+              <td>
+                {{ route.dev }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col w-100">
+    <div class="card">
+      <div class="card-header">IPv6 Routes</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Destination</th>
+              <th>Gateway</th>
+              <th>Protocol</th>
+              <th>Metric</th>
+              <th>Interface</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for route in routes6 %}
+            <tr>
+              <td>{{ route.dst }}</td>
+              <td>
+                {{ route.gateway }}
+              </td>
+              <td>
+                {{ route.protocol }}
+              </td>
+              <td>
+                {{ route.metric }}
+              </td>
+              <td>
+                {{ route.dev }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

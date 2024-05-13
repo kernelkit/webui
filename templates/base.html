@@ -294,7 +294,7 @@
 		<div class="accordion-collapse collapse" id="statusSubmenu" data-bs-parent="#sidebarAccordion">
 		  <ul class="nav flex-column ms-3">
 		    <li class="nav-item"><a class="nav-link active" href="#" id="status">Overview</a></li>
-		    <li class="nav-item"><a class="nav-link" href="#">Interfaces</a></li>
+		    <li class="nav-item"><a class="nav-link" href="#" id="net">Networking</a></li>
 		    <li class="nav-item"><a class="nav-link" href="#" id="log">View Logs</a></li>
 		  </ul>
 		</div>
@@ -369,10 +369,11 @@
     <script>
       $(document).ready(function() {
 	const validRoutes = {
-	  'status'  : '/status',
 	  'config'  : '/config',
-	  'upgrade' : '/upgrade',
 	  'log'     : '/log',
+	  'net'     : '/net',
+	  'status'  : '/status',
+	  'upgrade' : '/upgrade',
 	};
 	let lastKeepAlive = Date.now();
 	let timeoutId;

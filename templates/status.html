@@ -99,37 +99,4 @@
       </div>
     </div>
   </div>
-
-  <div class="col w-100">
-    <div class="card">
-      <div class="card-header">Network Interfaces</div>
-      <div class="card-body">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Interface</th>
-              <th style="width:5em;">Status</th>
-              <th>Addresses</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for iface in interfaces %}
-            <tr>
-              <td>{{ iface.ifname }}</td>
-              <td style="width:5em;" class="{{ 'bg-success' if iface.operstate == 'UP' else 'bg-danger' }}">
-                {{ iface.operstate }}
-              </td>
-              <td>
-                {% for addr in iface.addr_info %}
-                <div>{{ addr.local }}/{{ addr.prefixlen }}</div>
-                {% endfor %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </div>
-
