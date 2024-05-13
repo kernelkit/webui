@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Basic status and configuration application"""
 from datetime import datetime, timedelta
+import gzip
 import json
 import os
 import platform
@@ -8,7 +9,7 @@ import psutil
 import secrets
 import subprocess
 import re
-from flask import Flask, render_template, session, redirect, url_for, request, flash
+from flask import Flask, render_template, session, redirect, url_for, request, flash, jsonify, send_from_directory
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -192,6 +193,29 @@ def config():
         return redirect(url_for('index'))
 
     return render_template('config.html')
+
+@app.route('/log')
+def log():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+
+    return render_template('log.html')
+
+@app.route('/logs')
+def list_logs():
+    log_dir = '/var/log'
+    logs = [file for file in os.listdir(log_dir) if os.path.isfile(os.path.join(log_dir, file))]
+    logs.sort()
+    return jsonify(logs)
+
+@app.route('/logs/<filename>')
+def get_log(filename):
+    file_path = os.path.join('/var/log', filename)
+    if filename.endswith('.gz'):
+        with gzip.open(file_path, 'rt') as f:
+            content = f.read()
+        return content
+    return send_from_directory('/var/log', filename)
 
 @app.route('/upgrade')
 def upgrade():

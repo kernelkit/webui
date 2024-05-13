@@ -143,6 +143,39 @@
         margin-top: auto;
 	padding-bottom: 0px;
       }
+
+      /* Log file viewer */
+      .list-group-item {
+	border: none;  /* Remove borders for a cleaner look */
+	color: var(--sidebar-color);
+      }
+      .list-group-item.active {
+	color: var(--link-active-color);
+	background-color: var(--link-active-bg);
+      }
+      .list-group-item:hover {
+	cursor: pointer;
+	color: var(--link-hover-color);
+	background-color: var(--link-hover-bg);
+      }
+      .list-group-item:nth-of-type(odd) {
+	background-color: var(--sidebar-bg);
+      }
+      .list-group-item:nth-of-type(odd):hover {
+	color: var(--link-hover-color);
+	background-color: var(--link-hover-bg);
+      }
+
+      #log-list {
+	white-space: nowrap;  /* Keep file names on a single line */
+	overflow-x: auto;     /* Allow horizontal scrolling if needed */
+      }
+      #log-content {
+	white-space: pre-wrap; /* Maintains whitespace but allows wrapping */
+	overflow-y: auto;      /* Ensures scrollbar is available if needed */
+      }
+      /* /Log file viewer */
+
       /* CSS to ensure sidebar is always visible on larger screens */
       @media (min-width: 992px) { /* Adjust this breakpoint as needed */
 	.container-xxl {
@@ -262,7 +295,7 @@
 		  <ul class="nav flex-column ms-3">
 		    <li class="nav-item"><a class="nav-link active" href="#" id="status">Overview</a></li>
 		    <li class="nav-item"><a class="nav-link" href="#">Interfaces</a></li>
-		    <li class="nav-item"><a class="nav-link" href="#">View Logs</a></li>
+		    <li class="nav-item"><a class="nav-link" href="#" id="log">View Logs</a></li>
 		  </ul>
 		</div>
 	      </li>
@@ -339,6 +372,7 @@
 	  'status'  : '/status',
 	  'config'  : '/config',
 	  'upgrade' : '/upgrade',
+	  'log'     : '/log',
 	};
 	let lastKeepAlive = Date.now();
 	let timeoutId;
