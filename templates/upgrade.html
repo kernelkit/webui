@@ -1,12 +1,38 @@
 <div class="card">
   <div class="card-header">System Upgrade</div>
   <div class="card-body">
-    <form method="POST" action="/doupgrade" enctype="multipart/form-data">
+    <form method="POST" action="/upload" enctype="multipart/form-data" id="upgradeForm">
       <div class="mb-3">
         <label for="fileUpload" class="form-label">Select upgrade package (.pkg)</label>
-        <input type="file" class="form-control" id="fileUpload" name="upgradeFile" accept=".pkg">
+        <input type="file" class="form-control" id="fileUpload" name="file" accept=".pkg">
       </div>
       <button type="submit" class="btn btn-primary">Upload and Upgrade</button>
     </form>
   </div>
 </div>
+
+<script>
+  $(document).ready(function() {
+    $('#upgradeForm').submit(function(e) {
+      console.log("Form submission intercepted.");
+      e.preventDefault(); // Stop the form from submitting normally
+      var formData = new FormData(this);
+
+      $.ajax({
+        url: $(this).attr('action'),
+        type: 'POST',
+        data: formData,
+        processData: false,  // tell jQuery not to process the data
+        contentType: false,  // tell jQuery not to set contentType
+        success: function(data) {
+          if (data.next) {
+            loadPage(data.next); // Load the progress partial as indicated by the backend
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error("Upload failed:", xhr.responseText);
+        }
+      });
+    });
+  });
+</script>

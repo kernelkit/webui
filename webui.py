@@ -10,10 +10,12 @@ import secrets
 import subprocess
 import re
 from flask import Flask, render_template, session, redirect, url_for, request, flash, jsonify, send_from_directory
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 app.permanent_session_lifetime = timedelta(minutes=10)
+app.config['MAX_CONTENT_LENGTH'] = 150 * 1024 * 1024  # 150 MB limit
 
 @app.route('/')
 def index():
@@ -238,6 +240,26 @@ def upgrade():
         return redirect(url_for('index'))
 
     return render_template('upgrade.html')
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+
+    file = request.files['file']
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join('/tmp/', filename))
+        return jsonify({'next': 'progress'})
+
+    return 'No file found', 400
+
+@app.route('/progress')
+def progress():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+
+    return render_template('progress.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

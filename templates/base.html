@@ -35,11 +35,6 @@
 	--bg-success-text-color: #000;
       }
 
-      body {
-	padding-top: 74px;
-	min-height: 100vh;
-      }
-
       .bg-danger, .table .bg-danger {
 	color: var(--bg-danger-text-color, #fff);
 	background-color: #dc3545;
@@ -49,11 +44,15 @@
 	color: var(--bg-success-text-color, #fff);
 	background-color: #28a745;
       }
+
       .container-xxl {
+	height: 100vh;
+	padding-top: 78px;
 	display: flex;
 	flex-wrap: nowrap;
 	max-width: 100%;
 	overflow: hidden;
+	margin: 0;
       }
 
       .navbar {
@@ -207,7 +206,23 @@
 	}
       }
     </style>
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+
+    <script>
+      function loadPage(url) {
+	$.ajax({
+	  url:     url,
+	  type:    'GET',
+	  success: function(data) {
+	    $('#content').html(data);
+	  },
+	  error: function(xhr, status, error) {
+	    console.error("Failed to fetch data:", xhr.responseText);
+	    console.error("Status:", status);
+	    console.error("Error:", error);
+	  }
+	});
+      }
+    </script>
   </head>
   <body>
 
@@ -303,7 +318,7 @@
 		<div class="accordion-collapse collapse" id="maintSubmenu" data-bs-parent="#sidebarAccordion">
 		  <ul class="nav flex-column ms-3">
 		    <li class="nav-item"><a class="nav-link" id="upgrade" href="#"><i class="bi bi-arrow-up-square me-2"></i>Upgrade</a></li>
-		    <li class="nav-item"><a class="nav-link" href="#">Sub-item 2</a></li>
+		    <li class="nav-item"><a class="nav-link" id="progress" href="#">Progress</a></li>
 		  </ul>
 		</div>
 	      </li>
@@ -351,6 +366,7 @@
       </div>
     </div><!-- container-xxl -->
 
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
       $(document).ready(function() {
@@ -358,26 +374,12 @@
 	  'config'  : '/config',
 	  'log'     : '/log',
 	  'net'     : '/net',
+	  'progress': '/progress',
 	  'status'  : '/status',
 	  'upgrade' : '/upgrade',
 	};
 	let lastKeepAlive = Date.now();
 	let timeoutId;
-
-	function loadPage(url) {
-	  $.ajax({
-	    url:     url,
-	    type:    'GET',
-	    success: function(data) {
-	      $('#content').html(data);
-	    },
-	    error: function(xhr, status, error) {
-	      console.error("Failed to fetch data:", xhr.responseText);
-	      console.error("Status:", status);
-	      console.error("Error:", error);
-	    }
-	  });
-	}
 
 	$('.nav-link').click(function() {
 	  if (validRoutes[this.id]) {
