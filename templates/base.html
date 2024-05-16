@@ -169,18 +169,18 @@
 	  top: 54px;  /* Assuming your navbar is 54px high */
 	  left: 0;  /* Ensure the sidebar starts exactly from the left edge */
 	  bottom: 0;  /* Stretch to the bottom of the viewport */
-	  width: 190px;  /* Or whatever width you prefer */
+	  width: 220px;  /* Or whatever width you prefer */
 	  height: calc(100vh - 54px);  /* Adjust height taking into account the navbar */
 	}
 	.main-content {
-	  margin-left: 190px;
+	  margin-left: 220px;
 	  padding-top: 10px;
           flex-grow: 1;
 	}
 	#bdSidebar {
 	  position: fixed; /* Reset position for large screens */
 	  top: 54px;
-	  width: 190px; /* Set a fixed width or percentage as needed */
+	  width: 220px; /* Set a fixed width or percentage as needed */
 	  max-width: 100%; /* Ensures the sidebar doesn't exceed its container */
 	  transform: none !important; /* Override any transform from offcanvas */
 	  visibility: visible !important; /* Ensure sidebar is always visible */
@@ -290,23 +290,28 @@
 		</div>
 		<div class="accordion-collapse collapse" id="statusSubmenu" data-bs-parent="#sidebarAccordion">
 		  <ul class="nav flex-column ms-3">
-		    <li class="nav-item"><a class="nav-link active" href="#" id="status">Overview</a></li>
-		    <li class="nav-item"><a class="nav-link" href="#" id="net">Networking</a></li>
-		    <li class="nav-item"><a class="nav-link" href="#" id="log">View Logs</a></li>
+		    <li class="nav-item"><a class="nav-link active" href="#" id="status"><i class="bi bi-layout-text-sidebar-reverse me-2"></i>Overview</a></li>
+		    <li class="nav-item"><a class="nav-link" href="#" id="net"><i class="bi bi-diagram-3 me-2"></i>Networking</a></li>
+		    <li class="nav-item"><a class="nav-link" href="#" id="log"><i class="bi bi-journal-text me-2"></i>View Logs</a></li>
 		  </ul>
 		</div>
 	      </li>
+
 	      <li class="nav-item">
 		<div class="nav-link" role="button" data-bs-toggle="collapse" data-bs-target="#configSubmenu" aria-expanded="false" aria-controls="configSubmenu">
 		  <i class="bi bi-gear me-2"></i>Configuration
 		</div>
 		<div id="configSubmenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
 		  <ul class="nav flex-column ms-3">
-		    <li class="nav-item"><a class="nav-link" id="config" href="#">Sub-item 1</a></li>
-		    <li class="nav-item"><a class="nav-link" href="#">Sub-item 2</a></li>
+		    <li class="nav-item"><a class="nav-link" id="system-config" href="#"><i class="bi bi-cpu me-2"></i>System</a></li>
+		    <li class="nav-item"><a class="nav-link" id="fieldbus-config" href="#"><i class="bi bi-hdd-network me-2"></i>Fieldbus</a></li>
+		    <li class="nav-item"><a class="nav-link" id="fieldbus-config" href="#"><i class="bi bi-diagram-2 me-2"></i>Networking</a></li>
+		    <li class="nav-item"><a class="nav-link" id="fieldbus-config" href="#"><i class="bi bi-shield-lock me-2"></i>Firewall</a></li>
+		    <li class="nav-item"><a class="nav-link" id="fieldbus-config" href="#"><i class="bi bi-server me-2"></i>Services</a></li>
 		  </ul>
 		</div>
 	      </li>
+
 	      <li class="nav-item">
 		<div class="nav-link" role="button" data-bs-toggle="collapse" data-bs-target="#maintSubmenu" aria-expanded="false" aria-controls="maintSubmenu">
 		  <i class="bi bi-wrench me-2"></i>Maintenance
@@ -314,11 +319,12 @@
 		<div class="accordion-collapse collapse" id="maintSubmenu" data-bs-parent="#sidebarAccordion">
 		  <ul class="nav flex-column ms-3">
 		    <li class="nav-item"><a class="nav-link" id="upgrade" href="#"><i class="bi bi-arrow-up-square me-2"></i>Upgrade</a></li>
-		    <li class="nav-item"><a class="nav-link" id="progress" href="#">Progress</a></li>
+		    <li class="nav-item"><a class="nav-link" id="factory" href="#"><i class="bi bi-arrow-clockwise me-2"></i>Factory Reset</a></li>
 		  </ul>
 		</div>
 	      </li>
 	    </ul>
+
 	    <div class="bottom-nav-item d-lg-none">
 	      <hr>
 	      <ul class="nav flex-column">
