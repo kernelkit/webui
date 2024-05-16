@@ -15,6 +15,9 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 app.permanent_session_lifetime = timedelta(minutes=10)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Set the SameSite attribute
+app.config['SESSION_COOKIE_SECURE'] = True      # Ensure cookies are only sent over HTTPS
 app.config['MAX_CONTENT_LENGTH'] = 150 * 1024 * 1024  # 150 MB limit
 
 @app.route('/')
