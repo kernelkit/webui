@@ -8,10 +8,10 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <style>
       :root[data-bs-theme="light"] {
-	--navbar-bg: #f8f9fa;
+	--navbar-bg: #ffffff;
 	--navbar-text: #343a40;
 	--navbar-shadow: rgba(0, 0, 0, 0.1);
-	--sidebar-bg: #f8f9fa;
+	--sidebar-bg: #f8f8f8;
 	--sidebar-color: #333;
 	--icon-color: #333;
 	--link-hover-bg: #007bff;
@@ -24,7 +24,7 @@
 	--navbar-bg: #24292f;
 	--navbar-text: #f8f9fa;
 	--navbar-shadow: rgba(255, 255, 255, 0.1);
-	--sidebar-bg: #24292f;
+	--sidebar-bg: #252a2e;
 	--sidebar-color: #ccc;
 	--icon-color: #ccc;
 	--link-hover-bg: #0062cc;
@@ -80,7 +80,7 @@
 	right: 0;
 	background-color: var(--navbar-bg);
 	color: var(--navbar-text);
-	z-index: 1000;
+	z-index: 1100;
 	box-shadow: 0 4px 6px -1px var(--navbar-shadow);
       }
       .navbar-brand img {
@@ -95,6 +95,15 @@
       .sidebar-content {
         flex-grow: 1;
         overflow-auto;
+      }
+
+      .offcanvas {
+	background-color: var(--sidebar-bg);
+	color: var(--sidebar-text);
+	z-index: 1200;
+      }
+      .offcanvas-body {
+	padding: 0;
       }
 
       .bi {
@@ -183,7 +192,7 @@
 	}
 	.offcanvas {
 	  position: fixed;  /* Fixed positioning to keep it in place */
-	  top: 74px;  /* Assuming your navbar is 74px high */
+	  top: 79px;  /* Assuming your navbar is 74px high */
 	  left: 0;  /* Ensure the sidebar starts exactly from the left edge */
 	  bottom: 0;  /* Stretch to the bottom of the viewport */
 	  width: 190px;  /* Or whatever width you prefer */
@@ -197,7 +206,7 @@
 	}
 	#bdSidebar {
 	  position: fixed; /* Reset position for large screens */
-	  top: 74px;
+	  top: 79px;
 	  width: 190px; /* Set a fixed width or percentage as needed */
 	  max-width: 100%; /* Ensures the sidebar doesn't exceed its container */
 	  transform: none !important; /* Override any transform from offcanvas */
@@ -208,7 +217,7 @@
 	  display: none; /* Hide the header with the title and close button */
 	}
 	#bdSidebar .offcanvas-body {
-	  padding-top: 0; /* Adjust padding if the header was adding extra space */
+	  padding: var(--bs-offcanvas-padding-y) var(--bs-offcanvas-padding-x);
 	  left: 0;
 	}
 
@@ -283,7 +292,6 @@
 	  <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 	</div>
 	<div class="offcanvas-body">
-	  <hr>
 	  <!-- Accordion wrapper -->
 	  <div class="accordion" id="sidebarAccordion">
 	    <ul class="nav flex-column">
