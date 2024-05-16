@@ -56,23 +56,6 @@
 	overflow: hidden;
       }
 
-      .sidebar {
-        width: 160px;
-        top: 74px;
-	position: fixed;
-        bottom: 0;
-        left: 0;
-        z-index: 1100;
-        padding-top: 10px;
-	overflow-y: auto;  // Allows scrolling inside the sidebar if needed
-        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-        display: flex;
-        flex-direction: column;
-	flex-shrink: 0;
-        background-color: var(--sidebar-bg);
-	padding: 20px;
-      }
-
       .navbar {
 	position: fixed;
 	top: 0;
@@ -90,11 +73,6 @@
 	position: absolute;
 	left: auto;
 	right: 0;
-      }
-
-      .sidebar-content {
-        flex-grow: 1;
-        overflow-auto;
       }
 
       .offcanvas {
