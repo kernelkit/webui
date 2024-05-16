@@ -47,7 +47,7 @@
 
       .container-xxl {
 	height: 100vh;
-	padding-top: 78px;
+	padding: 58px 10px 10px 10px;
 	display: flex;
 	flex-wrap: nowrap;
 	max-width: 100%;
@@ -65,8 +65,11 @@
 	z-index: 1100;
 	box-shadow: 0 4px 6px -1px var(--navbar-shadow);
       }
+      .navbar-brand {
+	padding: 0;
+      }
       .navbar-brand img {
-	height: 48px;
+	height: 32px;
       }
       .navbar-nav .dropdown-menu {
 	position: absolute;
@@ -169,11 +172,11 @@
 	}
 	.offcanvas {
 	  position: fixed;  /* Fixed positioning to keep it in place */
-	  top: 79px;  /* Assuming your navbar is 74px high */
+	  top: 54px;  /* Assuming your navbar is 54px high */
 	  left: 0;  /* Ensure the sidebar starts exactly from the left edge */
 	  bottom: 0;  /* Stretch to the bottom of the viewport */
 	  width: 190px;  /* Or whatever width you prefer */
-	  height: calc(100vh - 74px);  /* Adjust height taking into account the navbar */
+	  height: calc(100vh - 54px);  /* Adjust height taking into account the navbar */
 	}
 	.main-content {
 	  margin-left: 190px;
@@ -183,7 +186,7 @@
 	}
 	#bdSidebar {
 	  position: fixed; /* Reset position for large screens */
-	  top: 79px;
+	  top: 54px;
 	  width: 190px; /* Set a fixed width or percentage as needed */
 	  max-width: 100%; /* Ensures the sidebar doesn't exceed its container */
 	  transform: none !important; /* Override any transform from offcanvas */
@@ -230,7 +233,7 @@
       <nav class="container-fluid flex-wrap flex-lg-nowrap" aria-label="Main navigation">
 
 	<a class="navbar-brand me-0 px-3" href="#">
-	  <img src="/static/logo.svg" alt="Logo">
+	  <img src="/static/logo-plain.svg" alt="Logo">
 	</a>
 
 	<div class="collapse navbar-collapse justify-content-end">
@@ -269,7 +272,7 @@
 	</div>
 
 	<div class="bd-navbar-toggle">
-	  <button class="navbar-toggler p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#bdSidebar" aria-controls="bdSidebar" aria-label="Toggle sidebar">
+	  <button class="navbar-toggler px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#bdSidebar" aria-controls="bdSidebar" aria-label="Toggle sidebar">
 	    <i class="bi bi-list"></i>
 	    <span class="d-none fs-6 pe-1">Show menu</span>
 	  </button>
