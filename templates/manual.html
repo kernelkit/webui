@@ -1,0 +1,10 @@
+<div class="container d-flex">
+  <div class=" w-75 mx-auto">
+    <div class="card">
+      <div class="card-header">{{ page | replace('_', ' ') | capitalize }}</div>
+      <div class="card-body">
+	{{ content | safe }}
+      </div>
+    </div>
+  </div>
+</div>

@@ -25,7 +25,13 @@ def index():
     session.permanent = True  # This ensures the session timeout is refreshed
     if not session.get('logged_in') or not session.get('username'):
         return render_template('login.html')
-    return render_template('main.html', username=session.get('username'))
+
+    mdir = os.path.join(app.static_folder, 'manual')
+    files = [f.replace('.html.gz', '') for f in os.listdir(mdir) if f.endswith('.html.gz')]
+    print("Found the following manual files")
+    print(files)
+
+    return render_template('main.html', manual_files=files, username=session.get('username'))
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -263,6 +269,19 @@ def progress():
         return redirect(url_for('index'))
 
     return render_template('progress.html')
+
+@app.route('/manual/<path:page>')
+def manual(page):
+    # Directory where HTML files are stored
+    manual_dir = os.path.join(app.static_folder, 'manual')
+    html_gz_file = os.path.join(manual_dir, f'{page}.html.gz')
+
+    if os.path.exists(html_gz_file):
+        with gzip.open(html_gz_file, 'rb') as file:
+            html_content = file.read().decode('utf-8')
+        return render_template('manual.html', content=html_content, page=page)
+    else:
+        return "Page not found", 404
 
 if __name__ == '__main__':
     app.run(debug=True)

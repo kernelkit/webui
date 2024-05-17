@@ -324,6 +324,23 @@
 		  </ul>
 		</div>
 	      </li>
+
+              <li class="nav-item">
+                <div class="nav-link" role="button" data-bs-toggle="collapse" data-bs-target="#manualSubmenu" aria-expanded="false" aria-controls="manualSubmenu">
+                  <i class="bi bi-book me-2"></i>Manual
+                </div>
+                <div id="manualSubmenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+                  <ul class="nav flex-column ms-3">
+                    {% for file in manual_files %}
+                    <li class="nav-item">
+                      <a class="nav-link" href="#" data-page="{{ file }}">
+                        <i class="bi bi-file-earmark-text me-2"></i>{{ file | capitalize }}
+                      </a>
+                    </li>
+		    {% endfor %}
+                  </ul>
+                </div>
+              </li>
 	    </ul>
 
 	    <div class="bottom-nav-item d-lg-none">
@@ -385,14 +402,21 @@
 	let timeoutId;
 
 	$('.nav-link').click(function() {
+	  console.log("Clicked " + this.id);
 	  if (validRoutes[this.id]) {
 	    if (!$(this).hasClass('active')) {
+	      console.log("Valid route");
               loadPage(validRoutes[this.id]);
 	    }
+          } else if (this.dataset.page) {
+	    console.log("Clicked ++" + this.dataset.page);
+            loadPage(`/manual/${this.dataset.page}`);
+          } else {
+	    console.log("Else " + this.dataset.page);
 	  }
 	});
 
-	$('#logout').click(function() {
+	  $('#logout').click(function() {
           window.location.href = '/logout';
 	});
 	$('#navlogout').click(function() {
