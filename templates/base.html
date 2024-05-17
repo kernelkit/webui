@@ -45,15 +45,6 @@
 	background-color: #28a745;
       }
 
-      .container-xxl {
-	height: 100vh;
-	padding: 58px 10px 10px 10px;
-	display: flex;
-	flex-wrap: nowrap;
-	max-width: 100%;
-	margin: 0;
-      }
-
       .navbar {
 	position: fixed;
 	padding: 0;
@@ -117,11 +108,21 @@
 	text-decoration: none;     /* Remove link underline on hover */
 	/* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */
       }
+
+      .main {
+	height: 100vh;
+	padding: 58px 10px 10px 10px;
+	disaply: flex;
+	margin: 0;
+      }
       .main-content {
         flex: 1;
 	flex-grow: 1;
         z-index: 1;
 	padding-top: 2px;
+      }
+      .main-content .row {
+	margin-right: 0;/* Avoid overflow-x for manual */
       }
 
       .bottom-nav-item {
@@ -163,9 +164,6 @@
 
       /* CSS to ensure sidebar is always visible on larger screens */
       @media (min-width: 992px) { /* Adjust this breakpoint as needed */
-	.container-xxl {
-	  --bs-gutter-x: 0;  /* Removes horizontal gutters on large screens */
-	}
 	.offcanvas {
 	  position: fixed;  /* Fixed positioning to keep it in place */
 	  top: 54px;  /* Assuming your navbar is 54px high */
@@ -274,7 +272,7 @@
       </nav>
     </header>
 
-    <div class="container-xxl">
+    <div class="container-fluid main">
 
       <div class="offcanvas offcanvas-start" tabindex="-1" id="bdSidebar" aria-labelledby="bdSidebarLabel">
 	<div class="offcanvas-header">
