@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title></title>
+</head>
+<body>
+<h1 id="network-configuration">Network Configuration</h1>
+<p>Infix aims to support all Linux Networking constructs.  The YANG models
+used to describe the system are chosen to fit well and leverage the
+underlying Linux kernel&#8217;s capabilities.  The <a href="https://www.rfc-editor.org/rfc/rfc8343">ietf-interfaces.yang</a>
+model forms the base, extended with <a href="https://www.rfc-editor.org/rfc/rfc8344">ietf-ip.yang</a> and other layer-3
+IETF models.  The layer-2 bridge and aggregate models are defined by
+Infix to exploit the unique features not available in IEEE models.</p>
+<blockquote>
+<p><strong>Note:</strong> when issuing <code>leave</code> to activate your changes, remember to
+also save your settings, <code>copy running-config startup-config</code>.  See
+the <a href="cli/introduction.md">CLI Introduction</a> for a background.</p>
+</blockquote>
+<h2 id="interface-lego">Interface LEGO®</h2>
+<p><img src="img/lego.svg" alt="Linux Networking Blocks" /></p>
+<table>
+<thead>
+<tr>
+<th><strong>Type</strong></th>
+<th><strong>Yang Model</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bridge</td>
+<td>infix-if-bridge</td>
+<td>SW implementation of an IEEE 802.1Q bridge</td>
+</tr>
+<tr>
+<td>ip</td>
+<td>ietf-ip, infix-ip</td>
+<td>IP address to the subordinate interface</td>
+</tr>
+<tr>
+<td>vlan</td>
+<td>infix-if-vlan</td>
+<td>Capture all traffic belonging to a specific 802.1Q VID</td>
+</tr>
+<tr>
+<td>lag<sup id="fnref1"><a href="#fn1" rel="footnote">1</a></sup></td>
+<td>infix-if-lag</td>
+<td>Bonds multiple interfaces into one, creating a link aggregate</td>
+</tr>
+<tr>
+<td>lo</td>
+<td>ietf-interfaces</td>
+<td>Software loopback interface</td>
+</tr>
+<tr>
+<td>eth</td>
+<td>ietf-interfaces</td>
+<td>Physical Ethernet device&#47;port</td>
+</tr>
+<tr>
+<td>veth</td>
+<td>infix-if-veth</td>
+<td>Virtual Ethernet pair, typically one end is in a container</td>
+</tr>
+</tbody>
+</table>
+<h2 id="data-plane">Data Plane</h2>
+<p>The blocks you choose, and how you connect them, defines your data plane.
+Here we see an example of how to bridge a virtual port with a physical
+LAN.</p>
+<p><img src="img/dataplane.svg" alt="Example of a 4-port switch with a link aggregate and a VETH pair to a container" /></p>
+<p>Depending on the (optional) VLAN filtering of the bridge, the container
+may have full or limited connectivity with outside ports, as well as the
+internal CPU.</p>
+<p>In fact the virtual port connected to the bridge can be member of
+several VLANs, with each VLAN being an interface with an IP address
+inside the container.</p>
+<p>Thanks to Linux, and technologies like switchdev, that allow you to
+split a switching fabric into unique (isolated) ports, the full
+separation and virtualization of all Ethernet layer properties are
+possible to share with a container.  Meaning, all the building blocks
+used on the left hand side can also be used freely on the right hand
+side as well.</p>
+<h3 id="bridging">Bridging</h3>
+<p>This is the most central part of the system.  A bridge is a switch, and
+a switch is a bridge.  In Linux, setting up a bridge with ports
+connected to physical switch fabric, means you manage the actual switch
+fabric!</p>
+<p>In Infix ports are by default not switch ports, unless the customer
+specific factory config sets it up this way.  To enable switching
+between ports you create a bridge and then add ports to that
+bridge. That&#8217;s it.</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface br0
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; up
+admin@example:&#47;config&#47;&#62; set interface eth0 bridge-port bridge br0
+admin@example:&#47;config&#47;&#62; set interface eth1 bridge-port bridge br0
+admin@example:&#47;config&#47;&#62; leave
+</code></pre>
+<p>Here we add two ports to bridge <code>br0</code>: <code>eth0</code> and <code>eth1</code>.</p>
+<blockquote>
+<p><strong>Note:</strong> Infix has many built-in helpers controlled by convention.
+E.g., if you name your bridge <code>brN</code>, where <code>N</code> is a number, Infix sets
+the interface type automatically and unlocks all bridge features.
+Other &#8220;magic&#8221; names are <code>ethN.M</code> for VLAN M on top of <code>ethN</code>, or
+<code>dockerN</code> to create an IP masquerading container bridge.</p>
+</blockquote>
+<h4 id="vlan-filtering-bridge">VLAN Filtering Bridge</h4>
+<p>By default bridges in Linux do not filter based on VLAN tags.  It can be
+enabled in Infix when creating a bridge by adding a port to a VLAN as a
+tagged or untagged member.  Use the port default VID (PVID) setting to
+control VLAN association for traffic ingressing a port untagged (default
+PVID: 1).</p>
+<pre><code>admin@example:&#47;config&#47;&#62; edit interface br0
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; up
+admin@example:&#47;config&#47;&#62; set interface eth0 bridge-port bridge br0
+admin@example:&#47;config&#47;&#62; set interface eth0 bridge-port pvid 10
+admin@example:&#47;config interface eth1 bridge-port bridge br0
+admin@example:&#47;config&#47;&#62; set interface eth1 bridge-port pvid 20
+admin@example:&#47;config&#47;&#62; edit interface br0
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; set bridge vlans vlan 10 untagged eth0
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; set bridge vlans vlan 20 untagged eth1
+</code></pre>
+<p>This sets <code>eth0</code> as an untagged member of VLAN 10 and <code>eth1</code> as an
+untagged member of VLAN 20.  Switching between these ports is thus
+prohibited.</p>
+<p>To terminate a VLAN in the switch itself, either for switch management
+or for routing, the bridge must become a (tagged) member of the VLAN.</p>
+<pre><code>admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; set bridge vlans vlan 10 tagged br0
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; set bridge vlans vlan 20 tagged br0
+</code></pre>
+<blockquote>
+<p>To route or to manage via a VLAN, a VLAN interface needs to be created
+on top of the bridge, see section <a href="#vlan-interfaces">VLAN Interfaces</a>
+below for more on this topic.</p>
+</blockquote>
+<h4 id="multicast-filtering-and-snooping">Multicast Filtering and Snooping</h4>
+<p>Multicast filtering in the bridge is handled by the bridge itself.  It
+can filter both IP multicast and MAC multicast.  For IP multicast it
+also supports &#8220;snooping&#8221;, i.e., IGMP and MLD, to automatically reduce
+the broadcast effects of multicast.  See the next section for a summary
+of the <a href="#terminology--abbreviations">terminology used</a>.</p>
+<blockquote>
+<p><strong>Note:</strong> currently there is no way to just enable multicast filtering
+without also enabling snooping.  This may change in the future, in
+which case a <code>filtering</code> enabled setting will be made available along
+with the existing <code>snooping</code> setting.</p>
+</blockquote>
+<p>When creating your bridge you must decide if you need a VLAN filtering
+bridge or a plain bridge (see previous section).  Multicast filtering is
+supported for either, but take note that it must be enabled and set up
+per VLAN when VLAN filtering is enabled &#8211; there are no global multicast
+settings in this operating mode.</p>
+<p>In the following example we have a regular 8-port bridge without VLAN
+filtering.  We focus on the multicast specific settings:</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface br0
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; set bridge multicast snooping
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; set ipv4 address 192.168.2.1 prefix-length 24
+admin@example:&#47;config&#47;interface&#47;br0&#47;&#62; leave
+admin@example:&#47;&#62; copy running-config startup-config
+</code></pre>
+<p>Here we enable snooping and set a static IPv4 address so that the switch
+can take part in IGMP querier elections.  (MLD querier election
+currently not supported.)  We can inspect the current state:</p>
+<pre><code>admin@example:&#47;&#62; show ip multicast
+Multicast Overview
+Query Interval (default): 125 sec
+Router Timeout          : 255
+Fast Leave Ports        :
+Router Ports            :
+Flood Ports             : e0, e1, e2, e3, e4, e5, e6, e7
+
+Interface       VID  Querier                     State  Interval  Timeout  Ver
+br0                  192.168.2.1                    Up       125     None    3
+
+Bridge          VID  Multicast Group       Ports
+br0                  224.1.1.1             e3, e2
+br0                  ff02::6a              br0
+</code></pre>
+<p>It is a small LAN, so our bridge has already become the elected IGMP
+querier.  We see it is ours because the timeout is <code>None</code>, and we
+recognize our IP address.  We can also see two ports that have joined
+the same IPv4 multicast group, 224.1.1.1, and one join from Infix itself
+for the IPv6 group ff02::6a.</p>
+<p>Now, let&#8217;s see what happens when we add another bridge, with VLAN
+filtering enabled.  We skip the boring parts about how to move ports
+e4-e7 to <code>br1</code> and assign them to VLANs, and again, focus on the
+multicast bits only:</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface br1
+admin@example:&#47;config&#47;interface&#47;br1&#47;&#62; set bridge vlans vlan 1 multicast snooping
+admin@example:&#47;config&#47;interface&#47;br1&#47;&#62; set bridge vlans vlan 2 multicast snooping
+admin@example:&#47;config&#47;interface&#47;br1&#47;&#62; leave
+admin@example:&#47;&#62; copy running-config startup-config
+</code></pre>
+<p>Let&#8217;s see what we get:</p>
+<pre><code>admin@example:&#47;&#62; show ip multicast
+Multicast Overview
+Query Interval (default): 125 sec
+Router Timeout          : 255
+Fast Leave Ports        : e5
+Router Ports            : e1, e2, e5, e6, e7
+Flood Ports             : e1, e2, e3, e4, e5, e6, e7, e8
+
+Interface       VID  Querier                     State  Interval  Timeout  Ver
+br0                  192.168.2.1                    Up       125     None    3
+br1               1  0.0.0.0                        Up       125     None    3
+br1               2  0.0.0.0                        Up       125     None    3
+
+Bridge          VID  Multicast Group       Ports
+br0                  224.1.1.1             e2
+br0                  ff02::fb              br0
+br0                  ff02::6a              br0
+br0                  ff02::1:ff00:0        br0
+br1               1  224.1.1.1             e5
+br1               2  224.1.1.1             e7
+br1               1  ff02::fb              br1
+br1               1  ff02::1:ff00:0        br1
+</code></pre>
+<p>In this setup we have a lot more going on.  Multiple multicast router
+ports have been detected, and behind the scenes someone has also added
+an IGMP&#47;MLD fast-leave port.</p>
+<h5 id="terminology-abbreviations">Terminology &#38; Abbreviations</h5>
+<ul>
+<li><strong>IGMP</strong>: Internet Group Membership Protocol, multicast subscription
+for IPv4, for details see <a href="https://www.rfc-editor.org/rfc/rfc3376.html">RFC3376</a></li>
+<li><strong>MLD</strong>: Multicast Listener Discovery (Protocol), multicast
+subscription for IPv6, for details see <a href="https://www.rfc-editor.org/rfc/rfc3810.html">RFC3810</a></li>
+<li><strong>Unknown&#47;Unregistered multicast</strong>: multicast groups that are <em>not</em>
+in the multicast forwarding database (MDB)</li>
+<li><strong>Known&#47;Registered multicast</strong>: multicast groups that <em>are</em> in the
+multicast forwarding database (MDB)</li>
+<li><strong>MDB</strong>: the multicast forwarding database, consists of filters for
+multicast groups, directing where multicast is allowed to egress.  A
+filter entry consists of a group and a port list.  The bridge filters
+with a unique database per VLAN, in the same was as the unicast FDB</li>
+<li><strong>Join&#47;Leave</strong>: the terminology used in earlier versions of the two
+protocols to subscribe and unsubscribe to a multicast group.  For
+more information, see <em>Membership Report</em></li>
+<li><strong>Membership Report</strong> A membership report is sent by end-devices and
+forwarded by switches to the elected querier on the LAN.  They
+consist of multiple &#8220;join&#8221; and &#8220;leave&#8221; operations on groups.  They
+can also, per group, list which senders to allow or block.  Switches
+usually only support the group subscription, and even more common
+also only support filtering on the MAC level<sup id="fnref2"><a href="#fn2" rel="footnote">2</a></sup></li>
+<li><strong>Querier election</strong>: the process of determining who is the elected
+IGMP&#47;MLD querier on a LAN.  Lowest numerical IP address wins, the
+special address 0.0.0.0 (proxy querier) never wins</li>
+<li><strong>Proxy querier</strong>: when no better querier exists on a LAN, one or
+more devices can send proxy queries with source address 0.0.0.0 (or
+:: for IPv6).  See <strong>Query Interval</strong>, below, why this is a good
+thing</li>
+<li><strong>Query interval</strong>: the time in seconds between two queries from an
+IGMP&#47;MLD querier.  It is not uncommon that end-devices do not send
+their membership reports unless they first hear a query</li>
+<li><strong>Fast Leave</strong>: set on a bridge port to ensure multicast is pruned as
+quickly as possible when a &#8220;leave&#8221; membership report is received.  In
+effect, this option marks the port as directly connected to an
+end-device.  When not set (default), a query with timeout is first
+sent to ensure no unintentional loss of multicast is incurred</li>
+<li><strong>Router port</strong>: can be both configured statically and detected at
+runtime based on connected devices, usually multicast routers.  On
+a router port <em>all</em> multicast is forwarded, both known and unknown</li>
+<li><strong>Flood port</strong>: set on a bridge port (default: enabled) to ensure
+all <em>unknown</em> multicast is forwarded</li>
+<li><strong>Router timeout</strong>: the time in seconds until a querier is deemed to
+have been lost and another device (switch&#47;router) takes over.  In the
+tables shown above, a <em>None</em> timeout is declared when the current
+device is the active querier</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> the reason why multicast flooding is enabled by default is
+to ensure safe co-existence with MAC multicast, which is very common
+in industrial networks.  It also allows end devices that do not know
+of IGMP&#47;MLD to communicate over multicast as long as the group they
+have chosen is not used by other IGMP&#47;MLD aware devices on the LAN.</p>
+<p>As soon as an IGMP&#47;MLD membership report to &#8220;join&#8221; a group is received
+the group is added to the MDB and forwarding to other ports stop.  The
+only exception to this rule is multicast router ports.</p>
+</blockquote>
+<h3 id="vlan-interfaces">VLAN Interfaces</h3>
+<p>Creating a VLAN can be done in many ways. This section assumes VLAN
+interfaces created atop another Linux interface.  E.g., the VLAN
+interfaces created on top of the Ethernet interface or bridge in the
+picture below.</p>
+<p><img src="img/interface-vlan-variants.svg" alt="VLAN interface on top of Ethernet or Bridge interfaces" /></p>
+<p>A VLAN interface is basically a filtering abstraction. When you run
+<code>tcpdump</code> on a VLAN interface you will only see the frames matching the
+VLAN ID of the interface, compared to <em>all</em> the VLAN IDs if you run
+<code>tcpdump</code> on the lower-layer interface.</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface eth0.20
+admin@example:&#47;config&#47;interface&#47;eth0.20&#47;&#62; show
+type vlan;
+vlan {
+  tag-type c-vlan;
+  id 20;
+  lower-layer-if eth0;
+}
+admin@example:&#47;config&#47;interface&#47;eth0.20&#47;&#62; leave
+</code></pre>
+<p>The example below assumes bridge br0 is already created, see <a href="#vlan-filtering-bridge">VLAN
+Filtering Bridge</a>.</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface vlan10
+admin@example:&#47;config&#47;interface&#47;vlan10&#47;&#62; set vlan id 10
+admin@example:&#47;config&#47;interface&#47;vlan10&#47;&#62; set vlan lower-layer-if br0
+admin@example:&#47;config&#47;interface&#47;vlan10&#47;&#62; leave
+</code></pre>
+<p>As conventions, a VLAN interface for VID 20 on top of an Ethernet
+interface <em>eth0</em> is named <em>eth0.20</em>, and a VLAN interface for VID 10 on
+top of a bridge interface <em>br0</em> is named <em>vlan10</em>.</p>
+<blockquote>
+<p><strong>Note:</strong> If you name your VLAN interface <code>foo0.N</code> or <code>vlanN</code>, where <code>N</code> is a number, Infix will set the interface type automatically for you.</p>
+</blockquote>
+<h3 id="veth-pairs">VETH Pairs</h3>
+<p>A Virtual Ethernet (VETH) pair is basically a virtual Ethernet cable.  A
+cable can be &#8220;plugged in&#8221; to a bridge and the other end can be given to
+a <a href="container.md">container</a>, or plugged into another bridge.</p>
+<p>The latter example is useful if you have multiple bridges in the system
+with different properties (VLAN filtering, IEEE group forwarding, etc.),
+but still want some way of communicating between these domains.</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface veth0a
+admin@example:&#47;config&#47;interface&#47;veth0a&#47;&#62; set veth peer veth0b
+admin@example:&#47;config&#47;interface&#47;veth0a&#47;&#62; end
+admin@example:&#47;config&#47;&#62; diff
+interfaces {
++  interface veth0a {
++    type veth;
++    veth {
++      peer veth0b;
++    }
++  }
++  interface veth0b {
++    type veth;
++    veth {
++      peer veth0a;
++    }
++  }
+}
+admin@example:&#47;config&#47;&#62;
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> this is another example of the automatic inference of the
+interface type from the name.  Any name can be used, but then you have
+to set the interface type to <code>veth</code> manually.</p>
+</blockquote>
+<h2 id="management-plane">Management Plane</h2>
+<p>This section details IP Addresses And Other Per-Interface IP settings.</p>
+<p>Infix support several network interface types, each can be assigned one
+or more IP addresses, both IPv4 and IPv6 are supported.</p>
+<p><img src="img/ip-iface-examples.svg" alt="IP on top of network interface examples" /></p>
+<h3 id="ipv4-address-assignment">IPv4 Address Assignment</h3>
+<p>Multiple address assignment methods are available:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left"><strong>Type</strong></th>
+<th style="text-align: left"><strong>Yang Model</strong></th>
+<th style="text-align: left"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">static</td>
+<td style="text-align: left">ietf-ip</td>
+<td style="text-align: left">Static assignment of IPv4 address, e.g., <em>10.0.1.1&#47;24</em></td>
+</tr>
+<tr>
+<td style="text-align: left">link-local</td>
+<td style="text-align: left">infix-ip</td>
+<td style="text-align: left">Auto-assignment of IPv4 address in 169.254.x.x&#47;16 range</td>
+</tr>
+<tr>
+<td style="text-align: left">dhcp</td>
+<td style="text-align: left">infix-dhcp-client</td>
+<td style="text-align: left">Assignment of IPv4 address by DHCP server, e.g., <em>10.0.1.1&#47;24</em></td>
+</tr>
+</tbody>
+</table>
+<p>Supported DHCP (request) options, configurability (Cfg) and defaults,
+are listed below.  Configurable options can be disabled on a per client
+interface basis, some options, like <code>clientid</code> and option 81, are
+possible to set the value of as well.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Opt</strong></th>
+<th><strong>Name</strong></th>
+<th><strong>Cfg</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>subnet</code></td>
+<td>No</td>
+<td>Request IP address and netmask</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>router</code></td>
+<td>Yes</td>
+<td>Default route(s), see also option 121 and 249</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>dns</code></td>
+<td>Yes</td>
+<td>DNS server(s), static ones take precedence</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>hostname</code></td>
+<td>Yes</td>
+<td>DHCP cannot set hostname, only for informing server</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>domain</code></td>
+<td>Yes</td>
+<td>Default domain name, for name resolution</td>
+</tr>
+<tr>
+<td>28</td>
+<td><code>broadcast</code></td>
+<td>Yes</td>
+<td>Broadcast address, calculated if disabled</td>
+</tr>
+<tr>
+<td>42</td>
+<td><code>ntpsrv</code></td>
+<td>Yes</td>
+<td>NTP server(s), static ones take precedence</td>
+</tr>
+<tr>
+<td>50</td>
+<td><code>address</code></td>
+<td>Yes</td>
+<td>Request (previously cached) address</td>
+</tr>
+<tr>
+<td>61</td>
+<td><code>clientid</code></td>
+<td>Yes</td>
+<td>Default MAC address (and option 12)</td>
+</tr>
+<tr>
+<td>81</td>
+<td><code>fqdn</code></td>
+<td>Yes</td>
+<td>Similar to option 12, request FQDN update in DNS</td>
+</tr>
+<tr>
+<td>119</td>
+<td><code>search</code></td>
+<td>Yes</td>
+<td>Request domain search list</td>
+</tr>
+<tr>
+<td>121</td>
+<td><code>staticroutes</code></td>
+<td>Yes</td>
+<td>Classless static routes</td>
+</tr>
+<tr>
+<td>249</td>
+<td><code>msstaticroutes</code></td>
+<td>Yes</td>
+<td>Microsoft static route</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Default:</strong> <code>router</code>, <code>dns</code>, <code>domain</code>, <code>broadcast</code>, <code>ntpsrv</code>, <code>search</code>,
+             <code>address</code>, <code>staticroutes</code>, <code>msstaticroutes</code></p>
+<blockquote>
+<p><strong>Note:</strong> DHCP address method is only available for <em>LAN</em> interfaces
+(Ethernet, virtual Ethernet (veth), bridge, link aggregates, etc.)</p>
+</blockquote>
+<h3 id="ipv6-address-assignment">IPv6 Address Assignment</h3>
+<p>Multiple address assignment methods are available:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left"><strong>Type</strong></th>
+<th style="text-align: left"><strong>Yang Model</strong></th>
+<th style="text-align: left"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">static</td>
+<td style="text-align: left">ietf-ip</td>
+<td style="text-align: left">Static assignment of IPv6 address, e.g., <em>2001:db8:0:1::1&#47;64</em></td>
+</tr>
+<tr>
+<td style="text-align: left">link-local</td>
+<td style="text-align: left">ietf-ip<sup id="fnref3"><a href="#fn3" rel="footnote">3</a></sup></td>
+<td style="text-align: left">(RFC4862) Auto-configured link-local IPv6 address (<em>fe80::0</em> prefix + interface identifier, e.g., <em>fe80::ccd2:82ff:fe52:728b&#47;64</em>)</td>
+</tr>
+<tr>
+<td style="text-align: left">global auto-conf</td>
+<td style="text-align: left">ietf-ip</td>
+<td style="text-align: left">(RFC4862) Auto-configured (stateless) global IPv6 address (prefix from router + interface identifier, e.g., <em>2001:db8:0:1:ccd2:82ff:fe52:728b&#47;64</em></td>
+</tr>
+</tbody>
+</table>
+<p>Both for <em>link-local</em> and <em>global auto-configuration</em>, it is possible
+to auto-configure using a random suffix instead of the interface
+identifier.</p>
+<h3 id="examples">Examples</h3>
+<p><img src="img/ip-address-example-switch.svg" alt="Switch example (eth0 and lo)" /></p>
+<pre><code>admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv6                   fe80::ff:fe00:0&#47;64 (link-layer)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<p>To illustrate IP address configuration, the examples below uses a
+switch with a single Ethernet interface (eth0) and a loopback
+interface (lo). As shown above, these examples assume <em>eth0</em> has an
+IPv6 link-local address and <em>lo</em> has static IPv4 and IPv6 addresses by
+default.</p>
+<h4 id="static-and-link-local-ipv4-addresses">Static and link-local IPv4 addresses</h4>
+<p><img src="img/ip-address-example-ipv4-static.svg" alt="Setting static IPv4 (and link-local IPv4)" /></p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface eth0 ipv4
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv4&#47;&#62; set address 10.0.1.1 prefix-length 24
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv4&#47;&#62; set autoconf enabled true
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv4&#47;&#62; diff
++interfaces {
++  interface eth0 {
++    ipv4 {
++      address 10.0.1.1 {
++        prefix-length 24;
++      }
++      autoconf {
++        enabled true;
++      }
++    }
++  }
++}
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv4&#47;&#62; leave
+admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv4                   169.254.1.3&#47;16 (random)
+                ipv4                   10.0.1.1&#47;24 (static)
+                ipv6                   fe80::ff:fe00:0&#47;64 (link-layer)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<p>As shown, the link-local IPv4 address is configured with <code>set autconf
+enabled true</code>.  The resulting address (169.254.1.3&#47;16) is of type
+<em>random</em> (<a href="https://www.rfc-editor.org/rfc/rfc8344">ietf-ip.yang</a>).</p>
+<h4 id="use-of-dhcp-for-ipv4-address-assignment">Use of DHCP for IPv4 address assignment</h4>
+<p><img src="img/ip-address-example-ipv4-dhcp.svg" alt="Using DHCP for IPv4 address assignment" /></p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit dhcp-client
+admin@example:&#47;config&#47;dhcp-client&#47;&#62; set client-if eth0
+admin@example:&#47;config&#47;dhcp-client&#47;&#62; set enabled true
+admin@example:&#47;config&#47;dhcp-client&#47;&#62; leave
+admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv4                   10.1.2.100&#47;24 (dhcp)
+                ipv6                   fe80::ff:fe00:0&#47;64 (link-layer)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<p>The resulting address (10.1.2.100&#47;24) is of type <em>dhcp</em>.</p>
+<h4 id="disabling-ipv6-link-local-addresses">Disabling IPv6 link-local address(es)</h4>
+<p>The (only) way to disable IPv6 link-local addresses is by disabling IPv6
+on the interface.</p>
+<pre><code class="language-(disabling">admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface eth0 ipv6
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; set enabled false
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; leave
+admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<h4 id="static-ipv6-address">Static IPv6 address</h4>
+<p><img src="img/ip-address-example-ipv6-static.svg" alt="Setting static IPv6" /></p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface eth0 ipv6
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; set address 2001:db8::1 prefix-length 64
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; leave
+admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv6                   2001:db8::1&#47;64 (static)
+                ipv6                   fe80::ff:fe00:0&#47;64 (link-layer)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<h4 id="stateless-auto-configuration-of-global-ipv6-address">Stateless Auto-configuration of Global IPv6 Address</h4>
+<p><img src="img/ip-address-example-ipv6-auto-global.svg" alt="Auto-configuration of global IPv6" /></p>
+<p>Stateless address auto-configuration of global addresses is enabled by
+default. The address is formed by concatenating the network prefix
+advertised by the router (here 2001:db8:0:1::0&#47;64) and the interface
+identifier.  The resulting address is of type <em>link-layer</em>, as it is
+formed based on the interface identifier (<a href="https://www.rfc-editor.org/rfc/rfc8344">ietf-ip.yang</a>).</p>
+<pre><code>admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv6                   2001:db8:0:1:0:ff:fe00:0&#47;64 (link-layer)
+                ipv6                   fe80::ff:fe00:0&#47;64 (link-layer)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<p>Disabling auto-configuration of global IPv6 addresses can be done as shown
+below.</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface eth0 ipv6
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; set autoconf create-global-addresses false
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; leave
+admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv6                   fe80::ff:fe00:0&#47;64 (link-layer)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<h4 id="random-link-identifiers-for-ipv6-stateless-autoconfiguration">Random Link Identifiers for IPv6 Stateless Autoconfiguration</h4>
+<p><img src="img/ip-address-example-ipv6-auto-global.svg" alt="Auto-configuration of global IPv6" /></p>
+<p>By default, the auto-configured link-local and global IPv6 addresses
+are formed from a link-identifier based on the MAC address.</p>
+<pre><code>admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv6                   2001:db8:0:1:0:ff:fe00:0&#47;64 (link-layer)
+                ipv6                   fe80::ff:fe00:0&#47;64 (link-layer)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<p>To avoid revealing identity information in the IPv6 address, it is
+possible to specify use of a random identifier (<a href="https://www.rfc-editor.org/rfc/rfc8344">ietf-ip.yang</a> and
+<a href="https://www.rfc-editor.org/rfc/rfc8981">RFC8981</a>).</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit interface eth0 ipv6
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; set autoconf create-temporary-addresses true
+admin@example:&#47;config&#47;interface&#47;eth0&#47;ipv6&#47;&#62; leave
+admin@example:&#47;&#62; show interfaces
+INTERFACE       PROTOCOL   STATE       DATA
+eth0            ethernet   UP          02:00:00:00:00:00
+                ipv6                   2001:db8:0:1:b705:8374:638e:74a8&#47;64 (random)
+                ipv6                   fe80::ad3d:b274:885a:9ffb&#47;64 (random)
+lo              ethernet   UP          00:00:00:00:00:00
+                ipv4                   127.0.0.1&#47;8 (static)
+                ipv6                   ::1&#47;128 (static)
+admin@example:&#47;&#62;
+</code></pre>
+<p>Both the link-local address (fe80::) and the global address (2001:)
+have changed type to <em>random</em>.</p>
+<h3 id="ipv4-forwarding">IPv4 forwarding</h3>
+<p>To be able to route (static or dynamic) on the interface it is
+required to enable forwarding. This setting controlls if packets
+received on this interface can be forwarded.
+   <code>
+   admin@example:&#47;config&#47;&#62; edit interface eth0
+   admin@example:&#47;config&#47;interface&#47;eth0&#47;&#62; set ipv4 forwarding
+   admin@example:&#47;config&#47;interface&#47;eth0&#47;&#62; leave
+   admin@example:&#47;&#62;
+</code></p>
+<h3 id="ipv6-forwarding">IPv6 forwarding</h3>
+<p>This flag behaves totally different than for IPv4. For IPv6 the
+ability to route between interfaces is always enabled, instead this
+flag controls if the interface will be in host&#47;router mode.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left"><strong>Feature</strong></th>
+<th style="text-align: left"><strong>Forward enabled</strong></th>
+<th style="text-align: left"><strong>Forward disabled</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">IsRouter set in Neighbour Advertisements.</td>
+<td style="text-align: left">Yes</td>
+<td style="text-align: left">No</td>
+</tr>
+<tr>
+<td style="text-align: left">Transmit Router Solicitations.</td>
+<td style="text-align: left">No</td>
+<td style="text-align: left">Yes</td>
+</tr>
+<tr>
+<td style="text-align: left">Router Advertisements are ignored</td>
+<td style="text-align: left">No</td>
+<td style="text-align: left">Yes</td>
+</tr>
+<tr>
+<td style="text-align: left">Accept Redirects</td>
+<td style="text-align: left">No</td>
+<td style="text-align: left">Yes</td>
+</tr>
+</tbody>
+</table>
+<pre><code>   admin@example:&#47;config&#47;&#62; edit interface eth0
+   admin@example:&#47;config&#47;interface&#47;eth0&#47;&#62; set ipv6 forwarding
+   admin@example:&#47;config&#47;interface&#47;eth0&#47;&#62; leave
+   admin@example:&#47;&#62;
+</code></pre>
+<h2 id="routing-support">Routing support</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left"><strong>Yang Model</strong></th>
+<th style="text-align: left"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">ietf-routing</td>
+<td style="text-align: left">Base model, used to set configuration and read operational status in the other models</td>
+</tr>
+<tr>
+<td style="text-align: left">ietf-ipv4-unicast-routing</td>
+<td style="text-align: left">Static IPv4 unicast routing</td>
+</tr>
+<tr>
+<td style="text-align: left">ietf-ipv6-unicast-routing</td>
+<td style="text-align: left">Static IPv6 unicast routing</td>
+</tr>
+<tr>
+<td style="text-align: left">ietf-ospf</td>
+<td style="text-align: left">OSPF routing</td>
+</tr>
+<tr>
+<td style="text-align: left">infix-routing</td>
+<td style="text-align: left">Infix deviations</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ipv4-static-routes">IPv4 Static routes</h3>
+<p>Remember to enable <a href="#IPv4-forwarding">IPv4 forwarding</a> for the interfaces.</p>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit routing control-plane-protocol static name default
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;static&#47;name&#47;default&#47;&#62; set ipv4 route 192.168.200.0&#47;24 next-hop next-hop-address 192.168.1.1
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;static&#47;name&#47;default&#47;&#62; leave
+admin@example:&#47;&#62;
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> You can only have one instance per routing protocol.</p>
+</blockquote>
+<h3 id="ipv6-static-routes">IPv6 Static routes</h3>
+<pre><code>admin@example:&#47;&#62; configure
+admin@example:&#47;config&#47;&#62; edit routing control-plane-protocol static name default
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;static&#47;name&#47;default&#47;&#62; set ipv6 route 2001:db8:3c4d:200::&#47;64 next-hop next-hop-address 2001:db8:3c4d:1::1
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;static&#47;name&#47;default&#47;&#62; leave
+admin@example:&#47;&#62;
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> You can only have one instance per routing protocol.</p>
+</blockquote>
+<h3 id="ospfv2-routing">OSPFv2 Routing</h3>
+<p>Infix supports OSPF dynamic routing for IPv4, i.e., OSPFv2.
+Remember to enable <a href="#IPv4-forwarding">IPv4 forwarding</a> for the
+interfaces you want to run OSPFv2.</p>
+<pre><code>admin@example:&#47;config&#47;&#62; edit routing control-plane-protocol ospfv2 name default
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;&#62; set ospf area 0.0.0.0 interface e0 enabled true
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;&#62; leave
+admin@example:&#47;&#62;
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> You can only have one instance per routing protocol.</p>
+</blockquote>
+<h4 id="ospf-area-types">OSPF area types</h4>
+<p>In addition to <em>regular</em> OSPF areas, area types <em>NSSA</em> and <em>Stub</em> are supported.</p>
+<p>To configure a NSSA area with summary routes:</p>
+<pre><code>admin@example:&#47;config&#47;&#62; edit routing control-plane-protocol ospfv2 name default
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;&#62; set ospf area 0.0.0.1 area-type nssa-area
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;&#62; set ospf area 0.0.0.1 summary true
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;&#62; leave
+admin@example:&#47;&#62;
+</code></pre>
+<h4 id="bidirectional-forwarding-detection-bfd">Bidirectional Forwarding Detection (BFD)</h4>
+<p>It is possible to enable BFD per interface to speed up detection of
+link loss.</p>
+<pre><code>admin@example:&#47;config&#47;&#62; edit routing control-plane-protocol ospfv2 name default
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;ospf&#47;&#62; set area 0.0.0.0 interface e0 bfd enabled true
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;&#62; leave
+admin@example:&#47;&#62;
+</code></pre>
+<h4 id="ospf-interface-settings">OSPF interface settings</h4>
+<p>We have already seen how to enable OSPF per interface (<em>enabled true</em>)
+and BFD for OSPF per interface (<em>bfd enabled true</em>). These and other
+OSPF interface settings are done in context of an OSFP area, e.g.,
+<em>area 0.0.0.0</em>. Available commands can be listed using the <code>?</code> mark.</p>
+<pre><code>admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;&#62; edit ospf area 0.0.0.0
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;ospf&#47;area&#47;0.0.0.0&#47;&#62; edit interface e0
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;ospf&#47;area&#47;0.0.0.0&#47;interface&#47;e0&#47;&#62; set ?
+  bfd                  BFD interface configuration.
+  cost                 Interface&#39;s cost.
+  dead-interval        Interval after which a neighbor is declared down
+  enabled              Enables&#47;disables the OSPF protocol on the interface.
+  hello-interval       Interval between Hello packets (seconds).  It must
+  interface-type       Interface type.
+  passive              Enables&#47;disables a passive interface.  A passive
+  retransmit-interval  Interval between retransmitting unacknowledged Link
+  transmit-delay       Estimated time needed to transmit Link State Update
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;ospf&#47;area&#47;0.0.0.0&#47;interface&#47;e0&#47;&#62; set
+</code></pre>
+<p>For example, setting the OSPF <em>interface type</em> to <em>point-to-point</em> for
+an Ethernet interface can be done as follows.</p>
+<pre><code>admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;ospf&#47;area&#47;0.0.0.0&#47;interface&#47;e0&#47;&#62; set interface-type point-to-point
+admin@example:&#47;config&#47;routing&#47;control-plane-protocol&#47;ospfv2&#47;name&#47;default&#47;ospf&#47;area&#47;0.0.0.0&#47;interface&#47;e0&#47;&#62;
+</code></pre>
+<h4 id="debug-ospfv2">Debug OSPFv2</h4>
+<p>Using NETCONF and the YANG model <em>ietf-routing</em> it is possible to read
+the OSPF routing table, neighbors and more, that may be useful for
+debugging the OSPFv2 setup. The CLI has various OSPF status commands
+such as <code>show ospf neighbor</code>, <code>show ospf interface</code> and <code>show ospf
+routes</code>.</p>
+<pre><code>admin@example:&#47;&#62; show ospf neighbor
+
+Neighbor ID     Pri State           Up Time         Dead Time Address         Interface                        RXmtL RqstL DBsmL
+10.1.1.2          1 Full&#47;-          3h46m59s          30.177s 10.1.1.2        e0:10.1.1.1                          0     0     0
+10.1.1.3          1 Full&#47;-          3h46m55s          34.665s 10.1.1.3        e1:10.1.1.1                          0     0     0
+
+admin@example:&#47;&#62;
+</code></pre>
+<h3 id="view-routing-table">View routing table</h3>
+<p>The routing table can be viewed from the operational datastore over
+NETCONF or using the CLI:</p>
+<h4 id="ipv4-routing-table">IPv4 routing table</h4>
+<pre><code>admin@example:&#47;&#62; show routes ipv4
+PREFIX                        NEXT-HOP                      PREF  PROTOCOL
+192.168.1.0&#47;24                e0                                  kernel
+192.168.200.0&#47;24              192.168.1.1                     20  static
+admin@example:&#47;&#62;
+</code></pre>
+<h4 id="ipv6-routing-table">IPv6 routing table</h4>
+<pre><code>admin@example:&#47;&#62; show routes ipv6
+PREFIX                        NEXT-HOP                      PREF  PROTOCOL
+2001:db8:3c4d:50::&#47;64         eth4                           256  kernel
+fe80::&#47;64                     eth5                           256  kernel
+fe80::&#47;64                     eth3                           256  kernel
+fe80::&#47;64                     eth1                           256  kernel
+fe80::&#47;64                     eth0                           256  kernel
+fe80::&#47;64                     eth2                           256  kernel
+fe80::&#47;64                     eth4                           256  kernel
+admin@example:&#47;&#62;
+</code></pre>
+<h4 id="source-protocol">Source protocol</h4>
+<p>The source protocol describes the origin of the route.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left"><strong>Protocol</strong></th>
+<th style="text-align: left"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">kernel</td>
+<td style="text-align: left">Added when setting a subnet address on an interface</td>
+</tr>
+<tr>
+<td style="text-align: left">static</td>
+<td style="text-align: left">User created static routes</td>
+</tr>
+<tr>
+<td style="text-align: left">dhcp</td>
+<td style="text-align: left">Routes retrieved from DHCP</td>
+</tr>
+<tr>
+<td style="text-align: left">ospf</td>
+<td style="text-align: left">Routes retreived from OSPFv2</td>
+</tr>
+</tbody>
+</table>
+<p>The YANG model <em>ietf-routing</em> support multiple ribs but only two are
+currently supported, namely <code>ipv4</code> and <code>ipv6</code>.</p>
+<pre><code>one IP multicast group maps to the same MAC multicast group.
+</code></pre>
+<div class="footnotes">
+<hr/>
+<ol>
+
+<li id="fn1">
+<p>Please note, link aggregates are not yet supported in Infix.&#160;<a href="#fnref1" rev="footnote">&#8617;</a></p>
+</li>
+
+<li id="fn2">
+<p>For example, IPv4 groups are mapped to MAC multicast addresses by
+mapping the low-order 23-bits of the IP address in the low-order 23
+bits of the Ethernet address 01:00:5E:00:00:00.  Meaning, more than&#160;<a href="#fnref2" rev="footnote">&#8617;</a></p>
+</li>
+
+<li id="fn3">
+<p>Link-local IPv6 addresses are implicitly enabled when enabling
+IPv6.  IPv6 can be enabled&#47;disabled per interface in the
+<a href="https://www.rfc-editor.org/rfc/rfc8344">ietf-ip</a> YANG model.&#160;<a href="#fnref3" rev="footnote">&#8617;</a></p>
+</li>
+
+</ol>
+</div>
+</body>
+</html>

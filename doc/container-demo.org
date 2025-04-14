@@ -1,0 +1,70 @@
+* Intro
+** What are containers?
+
+- *Cgroups* limit resource usage: CPU & RAM usage
+- *Namespaces* limit what is visible: files, interfaces, routes ...
+- *Security Modules* provide access control: AppArmor, Seccomp, capabilities
+
+#+BEGIN_QUOTE
+
+  “Containers are processes, born from tarballs,
+   anchored to namespaces, controlled by cgroups.”
+
+                               — Alice Goldfuss
+#+END_QUOTE
+
+** Show YANG models (tree)
+  =yanglint -f tree ieee802-dot1q-types@2022-10-29.yang ietf-interfaces@2018-02-20.yang infix-interfaces@2024-01-15.yang infix-containers@2024-02-01.yang=
+  1. Common interfaces settings and stats
+  2. Declaration of =container-network=
+  3. Containers have quite a few options: 
+     1. environment variables
+     2. networks: host or limited
+     3. mounts and volumes
+
+** Level of support
+  1. Basic functionality in place (not merged yet)
+  2. No registry management yet, but ...
+  3. No volume management yet, but ...
+  4. No IPv6 yet, but needed by our test system so ...
+  5. No security modules (seccomp profiles, or similar)
+
+* Application Container
+- Factory Reset
+- "Nothing here, nothing there, and nothing up my sleeve"
+  - Show bundled OCI image, useful for deployment
+- Basic 'network host'
+- =show containers=
+- set content index.html
+
+#+begin_src html
+<html>
+  <body>
+  <h1>HTTP SPOKEN HERE</h1>
+  <p>Hej svejs!</p>
+  </body>
+</html>
+#+end_src
+
+- How to extract the configuration in XML
+  =sysrepocfg -f xml -X -x /containers=
+
+* System Container
+1. Create IP masquerading docker0 bridge
+   1. Download from a registry
+2. Set HOSTNAME sys101
+3. Set read-only ;-)
+4. Remember an IP address for the host ...
+5. System container:
+   - port forwarding             ssh 222:22 + snmp 161:161/udp
+   - mounting `/sys/class/leds`
+6. Set volume etc dest /etc
+7. sys101> passwd
+8. ssh login to port 192.168.122.160:222
+9. Show snmpwalk =snmpwalk -v2c -c public 192.168.122.160=
+
+* TODO Extra Material
+- Show `ntpd`
+- +Show how to include an NTP configuration in `startup-config`+
+- Show how to access the host from a system container w/o password
+- Show DNS via host (maybe?)
