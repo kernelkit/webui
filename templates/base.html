@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <title>Web Management Interface</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('assets', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('assets', filename='css/bootstrap-icons.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('assets', filename='favicon.ico') }}">
     <style>
       :root[data-bs-theme="light"] {
 	--navbar-bg: #ffffff;
@@ -225,7 +225,7 @@
       <nav class="container-fluid flex-wrap flex-lg-nowrap" aria-label="Main navigation">
 
 	<a class="navbar-brand me-0 px-3" href="#">
-	  <img src="/static/logo-plain.svg" alt="Logo">
+	  <img src="/assets/img/logo-plain.svg" alt="Logo">
 	</a>
 
 	<div class="collapse navbar-collapse justify-content-end">
@@ -385,8 +385,8 @@
       </div>
     </div><!-- container-xxl -->
 
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('assets', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('assets', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
       $(document).ready(function() {
 	const validRoutes = {
