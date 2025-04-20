@@ -1,5 +1,4 @@
-// internal/api/status.go
-package api
+package main
 
 import (
 	"bufio"
@@ -8,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -50,7 +48,7 @@ type DiskData struct {
 }
 
 // StatusHandler handles the status page
-func StatusHandler(tmpl *template.Template) http.HandlerFunc {
+func statusHandler(tmpl *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		info, err := getSystemInfo()
 		if err != nil {
@@ -61,10 +59,10 @@ func StatusHandler(tmpl *template.Template) http.HandlerFunc {
 		// Render template based on request type
 		if r.Header.Get("HX-Request") == "true" {
 			// Render just the content for HTMX
-			tmpl.ExecuteTemplate(w, "status_content.html", info)
+			tmpl.ExecuteTemplate(w, "status.html", info)
 		} else {
 			// Render full page
-			tmpl.ExecuteTemplate(w, "status.html", info)
+			tmpl.ExecuteTemplate(w, "main.html", info)
 		}
 	}
 }

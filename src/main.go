@@ -32,7 +32,7 @@ var (
 var sessionStore *sessions.CookieStore
 
 // SessionName is the name of the session cookie
-const SessionName = "infix-session"
+const SessionName = "kernelkit"
 
 // SessionLifetime is the session lifetime in seconds (10 minutes)
 const SessionLifetime = 600
@@ -78,12 +78,30 @@ func loadTemplates(dir string) (*template.Template, error) {
 
 // initSessionStore initializes the session store with a random key
 func initSessionStore() {
-	// Generate a random secret key
-	key := make([]byte, 32)
-	_, err := rand.Read(key)
-	if err != nil {
-		// If reading from stdin fails, use a static key (less secure but works for testing)
-		key = []byte("infix-webui-secret-key-for-development-only")
+	keyFile := "session.key"
+	var key []byte
+
+	// Try to read existing key
+	if _, err := os.Stat(keyFile); err == nil {
+		key, err = os.ReadFile(keyFile)
+		if err != nil {
+			log.Printf("Error reading key file: %v, generating new key", err)
+		}
+	}
+
+	// Generate new key if none exists
+	if len(key) == 0 {
+		key = make([]byte, 32)
+		_, err := rand.Read(key)
+		if err != nil {
+			log.Fatalf("Failed to generate session key: %v", err)
+		}
+
+		// Save the key
+		err = os.WriteFile(keyFile, key, 0600)
+		if err != nil {
+			log.Printf("Warning: Failed to save session key: %v", err)
+		}
 	}
 
 	// Create the session store
@@ -135,18 +153,14 @@ func indexHandler(tmpl *template.Template) http.HandlerFunc {
 		// Check if user is logged in
 		if auth, ok := session.Values["logged_in"].(bool); !ok || !auth {
 			// Check for flash messages
-			var flashMessages []string
-			if flashes := session.Flashes(); len(flashes) > 0 {
-				for _, flash := range flashes {
-					if msg, ok := flash.(string); ok {
-						flashMessages = append(flashMessages, msg)
-					}
-				}
+			var flashes []interface{}
+			if session.Flashes() != nil {
+				flashes = session.Flashes()
 				session.Save(r, w)
 			}
 
 			tmpl.ExecuteTemplate(w, "login.html", map[string]interface{}{
-				"Flashes": flashMessages,
+				"Flashes": flashes,
 			})
 			return
 		}
@@ -206,6 +220,7 @@ func loginHandler(tmpl *template.Template) http.HandlerFunc {
 			// Get session
 			session, err := sessionStore.Get(r, SessionName)
 			if err != nil {
+				log.Printf("In loginHandler failed fetching sessin, err %d", username, err)
 				http.Error(w, "Failed to get session", http.StatusInternalServerError)
 				return
 			}
@@ -221,8 +236,13 @@ func loginHandler(tmpl *template.Template) http.HandlerFunc {
 				return
 			}
 
-			// Redirect to index
-			http.Redirect(w, r, "/", http.StatusFound)
+			if r.Header.Get("HX-Request") == "true" {
+				w.Header().Set("HX-Redirect", "/")
+				w.WriteHeader(http.StatusOK)
+			} else {
+				// Standard redirect for non-HTMX requests
+				http.Redirect(w, r, "/", http.StatusFound)
+			}
 		} else {
 			// If HTMX is used, return a specific fragment
 			if r.Header.Get("HX-Request") == "true" {
@@ -416,13 +436,13 @@ func setupRoutes(r *mux.Router, tmpl *template.Template) {
 }
 
 // statusHandler and other handler function stubs that would be implemented in the respective files
-func statusHandler(tmpl *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// This would be implemented in status.go
-		// For now, just render a placeholder template
-		tmpl.ExecuteTemplate(w, "status.html", nil)
-	}
-}
+// func statusHandler(tmpl *template.Template) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		// This would be implemented in status.go
+// 		// For now, just render a placeholder template
+// 		tmpl.ExecuteTemplate(w, "status.html", nil)
+// 	}
+// }
 
 func networkHandler(tmpl *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

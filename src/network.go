@@ -1,4 +1,4 @@
-package api
+package main
 
 import (
 	"encoding/json"
@@ -196,7 +196,7 @@ func splitInterfaceName(name string) []string {
 // tryParseInt tries to parse a string as an integer
 func tryParseInt(s string) (int, error) {
 	var num int
-	err := fmt.Sscanf(s, "%d", &num)
+	_, err := fmt.Sscanf(s, "%d", &num)
 	return num, err
 }
 

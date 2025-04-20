@@ -1,0 +1,138 @@
+{{ define "status_content.html" }}
+<div class="row">
+    <!-- System Information -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>System Information</span>
+                <button class="btn btn-sm btn-outline-secondary"
+                        hx-get="/api/status/refresh"
+                        hx-target="#system-status-content"
+                        hx-indicator="#refresh-indicator">
+                    <span id="refresh-indicator" class="spinner-border spinner-border-sm htmx-indicator" role="status"></span>
+                    Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Hostname</th>
+                            <td>{{ .Hostname }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Model</th>
+                            <td>{{ .Model }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">CPU</th>
+                            <td>{{ .CPUChipset }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Frequency</th>
+                            <td>{{ .CPUFrequency }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Temperature</th>
+                            <td>{{ .CPUTemperature }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Current Time</th>
+                            <td>{{ .CurrentTime }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Uptime</th>
+                            <td>{{ .Uptime }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Usage -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Resource Usage</div>
+            <div class="card-body">
+                <h5>CPU Usage</h5>
+                <div class="progress mb-3">
+                    <div class="progress-bar" role="progressbar" style="width: {{ .CPUUsage }}%;" aria-valuenow="{{ .CPUUsage }}" aria-valuemin="0" aria-valuemax="100">{{ .CPUUsage }}%</div>
+                </div>
+
+                <h5>Memory Usage</h5>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ .Memory.Percent }}%;" aria-valuenow="{{ .Memory.Percent }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ .Memory.Percent }}%
+                    </div>
+                </div>
+                <p class="text-muted small">{{ .Memory.Formatted }}</p>
+
+                <h5>Disk Usage</h5>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ .Disk.Percent }}%;" aria-valuenow="{{ .Disk.Percent }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ .Disk.Percent }}%
+                    </div>
+                </div>
+                <p class="text-muted small">{{ .Disk.Formatted }}</p>
+
+                <h5>Load Average</h5>
+                <p>
+                    <span class="badge bg-primary">1 min: {{ index .LoadAverage 0 }}</span>
+                    <span class="badge bg-secondary">5 min: {{ index .LoadAverage 1 }}</span>
+                    <span class="badge bg-dark">15 min: {{ index .LoadAverage 2 }}</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Version Information -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">Version Information</div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tbody>
+                        {{ if .VersionInfo.NAME }}
+                        <tr>
+                            <th scope="row">System</th>
+                            <td>{{ .VersionInfo.NAME }}</td>
+                        </tr>
+                        {{ end }}
+                        
+                        {{ if .VersionInfo.VERSION }}
+                        <tr>
+                            <th scope="row">Version</th>
+                            <td>{{ .VersionInfo.VERSION }}</td>
+                        </tr>
+                        {{ end }}
+                        
+                        {{ if .VersionInfo.ID }}
+                        <tr>
+                            <th scope="row">ID</th>
+                            <td>{{ .VersionInfo.ID }}</td>
+                        </tr>
+                        {{ end }}
+                        
+                        {{ if .VersionInfo.PRETTY_NAME }}
+                        <tr>
+                            <th scope="row">Description</th>
+                            <td>{{ .VersionInfo.PRETTY_NAME }}</td>
+                        </tr>
+                        {{ end }}
+                        
+                        {{ if .VersionInfo.HOME_URL }}
+                        <tr>
+                            <th scope="row">Home URL</th>
+                            <td><a href="{{ .VersionInfo.HOME_URL }}" target="_blank">{{ .VersionInfo.HOME_URL }}</a></td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}

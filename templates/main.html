@@ -1,17 +1,22 @@
-<!-- layout.html - Base template with HTMX integration -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }} - Infix OS</title>
-    <!-- Bootstrap CSS (from old prototype) -->
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/css/custom.css">
-    <!-- HTMX for dynamic content (new addition) -->
-    <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous"></script>
+    <title>{{block "title" .}}Dashboard{{end}}</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <script href="/assets/js/htmx.min.js"></script>
+    <script>
+      // Send keepalive request every 5 minutes
+      setInterval(function() {
+        fetch('/keepalive');
+      }, 5 * 60 * 1000);
+    </script>
 </head>
 <body>
+    <!-- Navigation bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">Infix OS</a>
@@ -19,18 +24,34 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/status">Status</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/net">Network</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/config">Configuration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/log">Logs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/upgrade">Upgrade</a>
+                    </li>
+                </ul>
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/network">Network</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/system">System</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/firewall">Firewall</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            Welcome, {{ .Username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -38,190 +59,85 @@
     </nav>
 
     <div class="container mt-4">
-        <!-- Main content area -->
-        {{ template "content" . }}
+      {{block "content" .}}
+      <div class="row">
+	<div class="col-12">
+          <h1>Infix OS Dashboard</h1>
+          <p>Welcome to the Infix OS web management interface.</p>
+	</div>
+      </div>
+
+      <div class="row mt-4">
+	<!-- Quick Links -->
+	<div class="col-md-6">
+          <div class="card mb-4">
+            <div class="card-header">Quick Links</div>
+            <div class="card-body">
+              <div class="list-group">
+                <a href="/status" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  System Status
+                  <span class="badge bg-primary rounded-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cpu" viewBox="0 0 16 16">
+                      <path d="M5 0a.5.5 0 0 1 .5.5V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2h1V.5a.5.5 0 0 1 1 0V2A2.5 2.5 0 0 1 14 4.5h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14v1h1.5a.5.5 0 0 1 0 1H14a2.5 2.5 0 0 1-2.5 2.5v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14h-1v1.5a.5.5 0 0 1-1 0V14A2.5 2.5 0 0 1 2 11.5H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2v-1H.5a.5.5 0 0 1 0-1H2A2.5 2.5 0 0 1 4.5 2V.5A.5.5 0 0 1 5 0zm-.5 3A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13h7a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 11.5 3h-7zM5 6.5A1.5 1.5 0 0 1 6.5 5h3A1.5 1.5 0 0 1 11 6.5v3A1.5 1.5 0 0 1 9.5 11h-3A1.5 1.5 0 0 1 5 9.5v-3z"/>
+                    </svg>
+                  </span>
+                </a>
+                <a href="/net" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  Network Configuration
+                  <span class="badge bg-success rounded-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ethernet" viewBox="0 0 16 16">
+                      <path d="M14 13.5v-7a.5.5 0 0 0-.5-.5H12V4.5a.5.5 0 0 0-.5-.5h-1V2a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 0-.5.5v2h-1a.5.5 0 0 0-.5.5v1.5H4.5a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5zM13 13H3V6.5h10V13z"/>
+                      <path d="M8 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+                    </svg>
+                  </span>
+                </a>
+                <a href="/log" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  System Logs
+                  <span class="badge bg-info rounded-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-journal-text" viewBox="0 0 16 16">
+                      <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                      <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2z"/>
+                      <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1z"/>
+                    </svg>
+                  </span>
+                </a>
+                <a href="/upgrade" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  System Upgrade
+                  <span class="badge bg-warning text-dark rounded-pill">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                      <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                      <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
+	</div>
+
+	<!-- Manual Documentation -->
+	<div class="col-md-6">
+          <div class="card mb-4">
+            <div class="card-header">Documentation</div>
+            <div class="card-body">
+              {{ if .ManualFiles }}
+              <div class="list-group">
+                {{ range .ManualFiles }}
+                <a href="/manual/{{ . }}" class="list-group-item list-group-item-action">
+                  {{ . }}
+                </a>
+                {{ end }}
+              </div>
+              {{ else }}
+              <p class="text-muted">No documentation files available.</p>
+              {{ end }}
+            </div>
+          </div>
+	</div>
+      </div>
+      {{ end }}
     </div>
 
-    <!-- Bootstrap JS (from old prototype) -->
     <script src="/assets/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-<!-- index.html - Dashboard with HTMX integration -->
-{{ define "content" }}
-<div class="row">
-    <div class="col-md-12">
-        <h1>Infix OS Dashboard</h1>
-        <p>Welcome to your Infix OS web interface.</p>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <!-- System Status Card with HTMX -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                System Status
-                <button class="btn btn-sm btn-outline-secondary float-end"
-                       hx-get="/api/system/status"
-                       hx-target="#system-status"
-                       hx-trigger="click"
-                       hx-indicator="#system-status-spinner">
-                    <span id="system-status-spinner" class="spinner-border spinner-border-sm htmx-indicator" role="status"></span>
-                    Refresh
-                </button>
-            </div>
-            <div class="card-body" id="system-status" hx-get="/api/system/status" hx-trigger="load">
-                <!-- This will be replaced by the HTMX call -->
-                Loading system status...
-            </div>
-        </div>
-    </div>
-
-    <!-- Network Interfaces Card with HTMX -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                Network Interfaces
-                <button class="btn btn-sm btn-outline-secondary float-end"
-                       hx-get="/api/network/interfaces"
-                       hx-target="#network-interfaces"
-                       hx-trigger="click"
-                       hx-indicator="#network-interfaces-spinner">
-                    <span id="network-interfaces-spinner" class="spinner-border spinner-border-sm htmx-indicator" role="status"></span>
-                    Refresh
-                </button>
-            </div>
-            <div class="card-body" id="network-interfaces" hx-get="/api/network/interfaces" hx-trigger="load">
-                <!-- This will be replaced by the HTMX call -->
-                Loading network interfaces...
-            </div>
-        </div>
-    </div>
-</div>
-{{ end }}
-
-<!-- Partial templates for HTMX responses -->
-
-<!-- system-status.html - This would be rendered by the Go backend for HTMX requests -->
-{{ define "system-status.html" }}
-<div class="row">
-    <div class="col-md-4">
-        <h5>CPU</h5>
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: {{ .CPU }}%;" aria-valuenow="{{ .CPU }}" aria-valuemin="0" aria-valuemax="100">{{ .CPU }}%</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <h5>Memory</h5>
-        <div class="progress">
-            <div class="progress-bar bg-success" role="progressbar" style="width: {{ .Memory }}%;" aria-valuenow="{{ .Memory }}" aria-valuemin="0" aria-valuemax="100">{{ .Memory }}%</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <h5>Disk</h5>
-        <div class="progress">
-            <div class="progress-bar bg-info" role="progressbar" style="width: {{ .Disk }}%;" aria-valuenow="{{ .Disk }}" aria-valuemin="0" aria-valuemax="100">{{ .Disk }}%</div>
-        </div>
-    </div>
-</div>
-<div class="mt-3">
-    <small class="text-muted">Last updated: {{ .Time }}</small>
-</div>
-{{ end }}
-
-<!-- network-interfaces.html - This would be rendered by the Go backend for HTMX requests -->
-{{ define "network-interfaces.html" }}
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th>Interface</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{ range .Interfaces }}
-        <tr>
-            <td>{{ .Name }}</td>
-            <td>
-                {{ if eq .State "up" }}
-                <span class="badge bg-success">Up</span>
-                {{ else }}
-                <span class="badge bg-danger">Down</span>
-                {{ end }}
-            </td>
-            <td>
-                <button class="btn btn-sm btn-primary"
-                       hx-get="/api/network/interface/{{ .Name }}"
-                       hx-target="#interface-details"
-                       hx-trigger="click">
-                    Details
-                </button>
-                {{ if eq .State "up" }}
-                <button class="btn btn-sm btn-warning"
-                       hx-post="/api/network/interface/{{ .Name }}"
-                       hx-vals='{"action": "down"}'
-                       hx-target="#network-interfaces"
-                       hx-confirm="Are you sure you want to bring {{ .Name }} down?">
-                    Bring Down
-                </button>
-                {{ else }}
-                <button class="btn btn-sm btn-success"
-                       hx-post="/api/network/interface/{{ .Name }}"
-                       hx-vals='{"action": "up"}'
-                       hx-target="#network-interfaces">
-                    Bring Up
-                </button>
-                {{ end }}
-            </td>
-        </tr>
-        {{ end }}
-    </tbody>
-</table>
-<div id="interface-details" class="mt-3">
-    <!-- Details will be loaded here when a user clicks the Details button -->
-</div>
-{{ end }}
-
-<!-- interface-details.html - Details view loaded via HTMX -->
-{{ define "interface-details.html" }}
-<div class="card">
-    <div class="card-header">
-        Interface: {{ .Name }}
-    </div>
-    <div class="card-body">
-        <dl class="row">
-            <dt class="col-sm-3">State</dt>
-            <dd class="col-sm-9">{{ .State }}</dd>
-            
-            <dt class="col-sm-3">IP Address</dt>
-            <dd class="col-sm-9">{{ .IP }}</dd>
-            
-            <dt class="col-sm-3">Netmask</dt>
-            <dd class="col-sm-9">{{ .Mask }}</dd>
-            
-            {{ if .Gateway }}
-            <dt class="col-sm-3">Gateway</dt>
-            <dd class="col-sm-9">{{ .Gateway }}</dd>
-            {{ end }}
-        </dl>
-        
-        <form hx-post="/api/network/interface/{{ .Name }}" hx-target="#interface-details">
-            <div class="mb-3">
-                <label for="ip" class="form-label">IP Address</label>
-                <input type="text" class="form-control" id="ip" name="ip" value="{{ .IP }}">
-            </div>
-            <div class="mb-3">
-                <label for="mask" class="form-label">Netmask</label>
-                <input type="text" class="form-control" id="mask" name="mask" value="{{ .Mask }}">
-            </div>
-            <div class="mb-3">
-                <label for="gateway" class="form-label">Gateway</label>
-                <input type="text" class="form-control" id="gateway" name="gateway" value="{{ .Gateway }}">
-            </div>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-        </form>
-    </div>
-</div>
-{{ end }}

@@ -1,62 +1,156 @@
+{{ define "login.html" }}
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" data-bs-theme="auto">
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Infix OS</title>
-    <!-- Include Bootstrap CSS (from the original Flask application) -->
-    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/assets/css/custom.css" rel="stylesheet">
-    <!-- Include HTMX for dynamic form submission -->
-    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <script href="/assets/css/htmx.min.js"></script>
+
+    <style>
+      :root {
+        --login-bg: #fff;          /* Light background */
+        --text-color: #333;        /* Light text color */
+	--input-autofill: #f0f0f0; /* Light autofill color */
+      }
+      :root[data-bs-theme="dark"] {
+        --login-bg: #343a40;       /* Dark background */
+        --text-color: #ccc;        /* Dark text color */
+	--input-autofill: #333;    /* Dark autofill color */
+      }
+      .container {
+        max-width: 400px;
+      }
+      .login-form {
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: var(--login-bg);  /* Use CSS variable */
+        color: var(--text-color);           /* Use CSS variable */
+      }
+      .profile-icon {
+        font-size: 32px;
+        vertical-align: bottom;
+      }
+
+      .theme-switcher {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	z-index: 1050;
+      }
+      .theme-switcher .btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+      }
+      .theme-switcher .bi {
+	transition: all 0.3s;
+      }
+
+      /* Override browser autofill styles */
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      input:-webkit-autofill:active {
+        transition: background-color 5000s ease-in-out 0s;
+        -webkit-text-fill-color: var(--text-color) !important;
+        box-shadow: 0 0 0px 1000px var(--input-autofill) inset;
+      }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container">
-        <div class="row justify-content-center mt-5">
-            <div class="col-md-6 col-lg-5">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="card-title mb-0">Infix OS Login</h4>
-                    </div>
-                    <div class="card-body">
-                        <!-- Flash messages for errors -->
-                        {{ if .Flashes }}
-                        <div class="alert alert-danger" role="alert">
-                            {{ range .Flashes }}
-                            <div>{{ . }}</div>
-                            {{ end }}
-                        </div>
-                        {{ end }}
-
-                        <!-- Login form -->
-                        <div id="login-form">
-                            <form action="/login" method="post" hx-post="/login" hx-indicator="#login-indicator">
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" name="username" required autofocus>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">
-                                        <span id="login-indicator" class="spinner-border spinner-border-sm htmx-indicator me-1" role="status"></span>
-                                        Login
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="card-footer text-muted text-center">
-                        <small>Infix OS Web Management Interface</small>
-                    </div>
-                </div>
-            </div>
+  <body class="d-flex align-items-center vh-100">
+    <div class="container my-auto">
+      <div class="login-form">
+        <h2 class="text-center"><i class="bi bi-person-circle profile-icon me-2"></i>Login</h2>
+        <div class="card-body">
+          <!-- Flash messages for errors -->
+          {{ if .Flashes }}
+          <div class="alert alert-danger" role="alert">
+            {{ range .Flashes }}
+            <div>{{ . }}</div>
+            {{ end }}
+          </div>
+          {{ end }}
+          <!-- Login form -->
+          {{ template "login_form" . }}
         </div>
-    </div>
+      </div>
 
-    <!-- Include Bootstrap JS -->
+      <div class="theme-switcher">
+	<input type="checkbox" id="themeToggle" class="btn-check">
+	<label class="btn btn-outline-secondary" for="themeToggle" title="Toggle theme">
+          <i class="bi bi-moon-stars"></i>
+          <i class="bi bi-sun d-none"></i>
+	</label>
+      </div>
+    </div>
     <script src="/assets/js/bootstrap.bundle.min.js"></script>
-</body>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+	const themeToggle = document.getElementById('themeToggle');
+	const currentTheme = localStorage.getItem('theme') || 'light'; // Default to light theme if nothing is stored
+
+	// Apply the current theme on initial load
+	document.documentElement.setAttribute('data-bs-theme', currentTheme);
+	themeToggle.checked = (currentTheme === 'dark');
+
+	// Listen for changes in the toggle switch
+	themeToggle.addEventListener('change', function() {
+	  if (this.checked) {
+	    document.documentElement.setAttribute('data-bs-theme', 'dark');
+	    localStorage.setItem('theme', 'dark');
+	  } else {
+	    document.documentElement.setAttribute('data-bs-theme', 'light');
+	    localStorage.setItem('theme', 'light');
+	  }
+	});
+
+	// Optional: Handle system theme changes if you want to keep supporting the 'auto' mode
+	function updateTheme() {
+	  const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	  document.documentElement.setAttribute('data-bs-theme', theme);
+	  themeToggle.checked = (theme === 'dark');
+	  localStorage.setItem('theme', theme); // Store theme change
+	}
+
+	const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+	themeMediaQuery.addEventListener('change', function() {
+	  updateTheme();
+	});
+
+	// Apply theme based on the system preferences initially if 'auto' is chosen
+	if (localStorage.getItem('theme') === 'auto' || !localStorage.getItem('theme')) {
+	  updateTheme();
+	}
+      });
+    </script>
+  </body>
 </html>
+{{ end }}
+
+{{ define "login_form" }}
+<div id="login-form">
+    {{ if .Error }}
+    <div class="alert alert-danger" role="alert">
+        {{ .Error }}
+    </div>
+    {{ end }}
+    
+    <form action="/login" method="post" hx-post="/login" hx-indicator="#login-indicator">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required autofocus>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+	<button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+</div>
+{{ end }}
