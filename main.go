@@ -91,6 +91,8 @@ func main() {
 		r.Get("/logout", logoutHandler)
 		r.Get("/status", statusHandler)
 		r.Get("/network", networkHandler)
+		r.Get("/log", logHandler)
+		r.Get("/tail-log", tailLogHandler)
 	})
 
 	log.Println("Listening on :8080")

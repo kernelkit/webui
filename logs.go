@@ -2,10 +2,9 @@ package main
 
 import (
 	"compress/gzip"
-	"encoding/json"
-	"html/template"
+	"fmt"
 	"io"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -14,178 +13,168 @@ import (
 	"strings"
 )
 
-// LogsHandler handles the log viewing page
-func LogsHandler(tmpl *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Render the logs page
-		tmpl.ExecuteTemplate(w, "log.html", nil)
-	}
+type LogInfo struct {
+	Files     []string
+	ActiveLog string
+	Content   string
 }
 
-// ListLogsHandler lists all log files in /var/log
-func ListLogsHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Read the log directory
-		files, err := ioutil.ReadDir("/var/log")
+// logHandler handles the log viewing page
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	// Get list of log files
+	files, err := listLogFiles()
+	if err != nil {
+		log.Printf("Error listing log files: %v", err)
+		http.Error(w, "Failed to read log directory", http.StatusInternalServerError)
+		return
+	}
+
+	// Default display - no file selected yet
+	info := &LogInfo{
+		Files:     files,
+		ActiveLog: "",
+		Content:   "",
+	}
+
+	// Check if a specific log file is requested
+	if logFile := r.URL.Query().Get("file"); logFile != "" {
+		// Validate the filename to prevent directory traversal
+		if strings.Contains(logFile, "..") || strings.Contains(logFile, "/") {
+			http.Error(w, "Invalid log filename", http.StatusBadRequest)
+			return
+		}
+
+		content, err := readLogFile(logFile)
 		if err != nil {
-			http.Error(w, "Failed to read log directory", http.StatusInternalServerError)
+			log.Printf("Error reading log file %s: %v", logFile, err)
+			http.Error(w, fmt.Sprintf("Failed to read log file: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		// Filter and sort log files
-		var logs []string
-		for _, file := range files {
-			if !file.IsDir() {
-				logs = append(logs, file.Name())
-			}
-		}
-		sort.Strings(logs)
-
-		// Return the list of logs
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(logs)
+		info.ActiveLog = logFile
+		info.Content = content
 	}
+
+	renderPage(w, r, "log", info)
 }
 
-// GetLogHandler retrieves and displays a specific log file
-func GetLogHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Get log filename from URL path
-		filename := strings.TrimPrefix(r.URL.Path, "/logs/")
-		if filename == "" {
-			http.Error(w, "Log filename is required", http.StatusBadRequest)
-			return
-		}
-
-		// Validate the filename to prevent directory traversal
-		if strings.Contains(filename, "..") || strings.Contains(filename, "/") {
-			http.Error(w, "Invalid log filename", http.StatusBadRequest)
-			return
-		}
-
-		// Construct the full file path
-		filePath := filepath.Join("/var/log", filename)
-
-		// Check if the file exists
-		_, err := os.Stat(filePath)
-		if os.IsNotExist(err) {
-			http.Error(w, "Log file not found", http.StatusNotFound)
-			return
-		}
-
-		// Check if the file is gzipped
-		if strings.HasSuffix(filename, ".gz") {
-			// Open the gzipped file
-			file, err := os.Open(filePath)
-			if err != nil {
-				http.Error(w, "Failed to open log file", http.StatusInternalServerError)
-				return
-			}
-			defer file.Close()
-
-			// Create a gzip reader
-			gzipReader, err := gzip.NewReader(file)
-			if err != nil {
-				http.Error(w, "Failed to read gzipped log file", http.StatusInternalServerError)
-				return
-			}
-			defer gzipReader.Close()
-
-			// Read the content
-			content, err := io.ReadAll(gzipReader)
-			if err != nil {
-				http.Error(w, "Failed to read log content", http.StatusInternalServerError)
-				return
-			}
-
-			// Set content type and write the content
-			w.Header().Set("Content-Type", "text/plain")
-			w.Write(content)
-			return
-		}
-
-		// For non-gzipped files, serve the file directly
-		http.ServeFile(w, r, filePath)
+// listLogFiles returns a sorted list of log files from /var/log
+func listLogFiles() ([]string, error) {
+	// Read the log directory
+	files, err := os.ReadDir("/var/log")
+	if err != nil {
+		return nil, err
 	}
+
+	// Filter and sort log files
+	var logs []string
+	for _, file := range files {
+		if !file.IsDir() {
+			logs = append(logs, file.Name())
+		}
+	}
+	sort.Strings(logs)
+
+	return logs, nil
 }
 
-// StreamLogHandler creates a streaming endpoint for log files
-// This allows real-time viewing of logs with automatic updates
-func StreamLogHandler(tmpl *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Get log filename from URL path
-		filename := strings.TrimPrefix(r.URL.Path, "/stream-log/")
-		if filename == "" {
-			http.Error(w, "Log filename is required", http.StatusBadRequest)
-			return
-		}
+// readLogFile reads the content of a log file, handling gzipped files
+func readLogFile(filename string) (string, error) {
+	// Construct the full file path
+	filePath := filepath.Join("/var/log", filename)
 
-		// Validate the filename to prevent directory traversal
-		if strings.Contains(filename, "..") || strings.Contains(filename, "/") {
-			http.Error(w, "Invalid log filename", http.StatusBadRequest)
-			return
-		}
-
-		// Set up Server-Sent Events
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		// Flush the headers to send them to the client
-		if f, ok := w.(http.Flusher); ok {
-			f.Flush()
-		}
-
-		// Render template for streaming view
-		tmpl.ExecuteTemplate(w, "log_stream.html", map[string]interface{}{
-			"Filename": filename,
-		})
+	// Check if the file exists
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return "", fmt.Errorf("log file not found")
 	}
-}
 
-// TailLogHandler provides the tail functionality for logs
-func TailLogHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Get log filename from URL path
-		filename := strings.TrimPrefix(r.URL.Path, "/tail-log/")
-		if filename == "" {
-			http.Error(w, "Log filename is required", http.StatusBadRequest)
-			return
-		}
+	// Check if it's a large file (>1MB) and use tail instead
+	fileInfo, err := os.Stat(filePath)
+	if err == nil && fileInfo.Size() > 1024*1024 {
+		return tailLogFile(filename, "1000")
+	}
 
-		// Validate the filename to prevent directory traversal
-		if strings.Contains(filename, "..") || strings.Contains(filename, "/") {
-			http.Error(w, "Invalid log filename", http.StatusBadRequest)
-			return
-		}
-
-		// Construct the full file path
-		filePath := filepath.Join("/var/log", filename)
-
-		// Check if the file exists
-		_, err := os.Stat(filePath)
-		if os.IsNotExist(err) {
-			http.Error(w, "Log file not found", http.StatusNotFound)
-			return
-		}
-
-		// Get the number of lines to tail
-		lines := r.URL.Query().Get("lines")
-		if lines == "" {
-			lines = "100" // Default to 100 lines
-		}
-
-		// Execute the tail command
-		cmd := exec.Command("tail", "-n", lines, filePath)
-		output, err := cmd.Output()
+	// Check if the file is gzipped
+	if strings.HasSuffix(filename, ".gz") {
+		// Open the gzipped file
+		file, err := os.Open(filePath)
 		if err != nil {
-			http.Error(w, "Failed to tail log file", http.StatusInternalServerError)
-			return
+			return "", err
+		}
+		defer file.Close()
+
+		// Create a gzip reader
+		gzipReader, err := gzip.NewReader(file)
+		if err != nil {
+			return "", err
+		}
+		defer gzipReader.Close()
+
+		// Read the content
+		content, err := io.ReadAll(gzipReader)
+		if err != nil {
+			return "", err
 		}
 
-		// Set content type and write the output
-		w.Header().Set("Content-Type", "text/plain")
-		w.Write(output)
+		return string(content), nil
 	}
+
+	// For non-gzipped files, read directly
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
+}
+
+// tailLogFile executes the tail command on a log file
+func tailLogFile(filename string, lines string) (string, error) {
+	if lines == "" {
+		lines = "100" // Default to 100 lines
+	}
+
+	// Construct the full file path
+	filePath := filepath.Join("/var/log", filename)
+
+	// Execute the tail command
+	cmd := exec.Command("tail", "-n", lines, filePath)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	return string(output), nil
+}
+
+// tailLogHandler handles AJAX requests for tailing logs
+func tailLogHandler(w http.ResponseWriter, r *http.Request) {
+	// Get log filename from query parameter
+	filename := r.URL.Query().Get("file")
+	if filename == "" {
+		http.Error(w, "Log filename is required", http.StatusBadRequest)
+		return
+	}
+
+	// Validate the filename to prevent directory traversal
+	if strings.Contains(filename, "..") || strings.Contains(filename, "/") {
+		http.Error(w, "Invalid log filename", http.StatusBadRequest)
+		return
+	}
+
+	// Get the number of lines to tail
+	lines := r.URL.Query().Get("lines")
+
+	// Tail the log file
+	content, err := tailLogFile(filename, lines)
+	if err != nil {
+		log.Printf("Error tailing log file %s: %v", filename, err)
+		http.Error(w, fmt.Sprintf("Failed to tail log file: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Set content type and write the output
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(content))
 }

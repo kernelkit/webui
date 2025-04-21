@@ -1,42 +1,62 @@
-{{ define "content" }}
-<div class="row row-cols-1 row-cols-md-2 g-2">
-  <!-- Log File Content -->
-  <div class="col-md-9">
-    <div class="card">
-      <div class="card-header" id="log-file-title">Log Content</div>
-      <div class="card-body" style="overflow-y: scroll; height: calc(100vh - 7rem);">
-        <pre id="log-content">{{ .LogContent }}</pre>
+{{define "content"}}
+<div class="row">
+  <div class="col-md-3">
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <span>Log Files</span>
+          <button class="btn btn-sm btn-outline-secondary refresh-logs" title="Refresh log list"
+                  hx-get="/log" 
+                  hx-target="#content"
+                  hx-swap="innerHTML">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush" id="log-list">
+          {{range .Files}}
+            <a class="list-group-item list-group-item-action {{if eq . $.ActiveLog}}active{{end}}"
+               hx-get="/log?file={{.}}"
+               hx-target="#content"
+               hx-swap="innerHTML">
+              {{.}}
+            </a>
+          {{else}}
+            <div class="list-group-item text-center text-muted">No log files found</div>
+          {{end}}
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- List of Available Log Files -->
-  <div class="col-md-3">
+  <div class="col-md-9">
     <div class="card">
       <div class="card-header">
-        Available Log Files
+        <div class="d-flex justify-content-between align-items-center">
+          <span>{{if .ActiveLog}}{{.ActiveLog}}{{else}}Select a log file{{end}}</span>
+          {{if .ActiveLog}}
+          <div>
+            <button class="btn btn-sm btn-outline-secondary refresh-content" title="Refresh log content"
+                    hx-get="/log?file={{.ActiveLog}}" 
+                    hx-target="#content"
+                    hx-swap="innerHTML">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary tail-log" title="Tail log (last 100 lines)"
+                    hx-get="/log?file={{.ActiveLog}}&tail=100" 
+                    hx-target="#content"
+                    hx-swap="innerHTML">
+              <i class="bi bi-arrow-down-square"></i> Tail
+            </button>
+          </div>
+          {{end}}
+        </div>
       </div>
-      <div class="card-body" style="overflow-y: scroll; height: calc(100vh - 7rem); padding: 0;">
-        <ul id="log-list" class="list-group list-group-flush">
-          {{ range .LogFiles }}
-          <li class="list-group-item {{ if eq . $.CurrentLog }}active{{ end }}"
-              hx-get="/logs/{{ . }}"
-              hx-target="#log-content"
-              hx-swap="innerHTML"
-              hx-trigger="click"
-              hx-on::after-request="
-                     document.querySelectorAll('#log-list .list-group-item').forEach(item => {
-                     item.classList.remove('active');
-                     });
-                     this.classList.add('active');
-                     document.getElementById('log-file-title').textContent = '{{ . }}';
-		     ">
-            {{ . }}
-          </li>
-          {{ end }}
-        </ul>
+      <div class="card-body p-0">
+        <pre id="log-content" class="m-0 p-3" style="max-height: 70vh; overflow-y: auto;">{{if .Content}}{{.Content}}{{else}}{{if .ActiveLog}}Loading...{{else}}No log file selected{{end}}{{end}}</pre>
       </div>
     </div>
   </div>
 </div>
-{{ end }}
+{{end}}
