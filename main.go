@@ -6,6 +6,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -98,8 +99,10 @@ func main() {
 		r.Get("/tail-log", tailLogHandler)
 	})
 
-	log.Println("Listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	// Only localhost, use nginx or similar to access
+	listenAddr := fmt.Sprintf("localhost:%d", port)
+	log.Printf("Server starting at http://%s\n", listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, r))
 }
 
 func loadTemplates() error {
