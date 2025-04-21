@@ -16,16 +16,16 @@
           <tbody>
             {{ range .Interfaces }}
             <tr>
-              <td>{{ .IfName }}</td>
+              <td>{{ .Name }}</td>
               <td style="width:10em;">
-                {{ .Address }}
+                {{ .HWAddr }}
               </td>
-              <td style="width:5em;" class="{{ if eq .OperState "UP" }}bg-success{{ else }}bg-danger{{ end }}">
-                {{ .OperState }}
+              <td style="width:5em;" class="{{ if eq .State "UP" }}bg-success{{ else }}bg-danger{{ end }}">
+                {{ .State }}
               </td>
               <td>
-                {{ range .AddrInfo }}
-                <div>{{ .Local }}/{{ .PrefixLen }}</div>
+                {{ range .Addresses }}
+                <div>{{ .Address }}/{{ .PrefixLen }}</div>
                 {{ end }}
               </td>
             </tr>
@@ -53,11 +53,11 @@
           <tbody>
             {{ range .Routes4 }}
             <tr>
-              <td>{{ .Dst }}</td>
+              <td>{{ .Destination }}</td>
               <td>{{ .Gateway }}</td>
               <td>{{ .Protocol }}</td>
               <td>{{ .Metric }}</td>
-              <td>{{ .Dev }}</td>
+              <td>{{ .Device }}</td>
             </tr>
             {{ end }}
           </tbody>
@@ -83,11 +83,11 @@
           <tbody>
             {{ range .Routes6 }}
             <tr>
-              <td>{{ .Dst }}</td>
+              <td>{{ .Destination }}</td>
               <td>{{ .Gateway }}</td>
               <td>{{ .Protocol }}</td>
               <td>{{ .Metric }}</td>
-              <td>{{ .Dev }}</td>
+              <td>{{ .Device }}</td>
             </tr>
             {{ end }}
           </tbody>

@@ -90,6 +90,7 @@ func main() {
 		r.Use(authMiddleware)
 		r.Get("/logout", logoutHandler)
 		r.Get("/status", statusHandler)
+		r.Get("/network", networkHandler)
 	})
 
 	log.Println("Listening on :8080")
