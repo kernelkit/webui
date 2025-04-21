@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/go-chi/chi/v5 v5.2.1
+	github.com/gomarkdown/markdown v0.0.0-20250311123330-531bef5e742b
 	github.com/msteinert/pam v1.2.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/spf13/pflag v1.0.6

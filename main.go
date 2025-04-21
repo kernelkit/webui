@@ -38,9 +38,10 @@ type SessionConfig struct {
 }
 
 type PageData struct {
-	Title    string
-	Username string
-	Content  interface{}
+	Title       string
+	Username    string
+	Content     interface{}
+	ManualFiles []string
 }
 
 // Command line options
@@ -90,6 +91,8 @@ func main() {
 		r.Use(authMiddleware)
 		r.Get("/logout", logoutHandler)
 		r.Get("/status", statusHandler)
+		r.Get("/manual", manualHandler)
+		r.Get("/manual/{name}", manualHandler)
 		r.Get("/network", networkHandler)
 		r.Get("/log", logHandler)
 		r.Get("/tail-log", tailLogHandler)
@@ -168,11 +171,18 @@ func renderPage(w http.ResponseWriter, r *http.Request, nm string, info interfac
 		return
 	}
 
+	manualFiles, err := listManualFiles()
+	if err != nil {
+		log.Printf("Error listing manual files: %v", err)
+		manualFiles = []string{}
+	}
+
 	// Build common page data
 	data := PageData{
-		Title:    strings.Title(nm),
-		Username: getUsername(r),
-		Content:  info,
+		Title:       strings.Title(nm),
+		Username:    getUsername(r),
+		Content:     info,
+		ManualFiles: manualFiles,
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
