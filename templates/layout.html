@@ -499,11 +499,11 @@
     <!-- Theme switching script -->
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        // Theme buttons
-        var themeButtons = document.querySelectorAll('[data-bs-theme-value]');
-        
-        themeButtons.forEach(function(button) {
-          button.addEventListener('click', function() {
+	// Theme buttons
+	var themeButtons = document.querySelectorAll('[data-bs-theme-value]');
+	
+	themeButtons.forEach(function(button) {
+	  button.addEventListener('click', function() {
             var theme = button.getAttribute('data-bs-theme-value');
             
             if (theme === 'auto') {
@@ -515,90 +515,55 @@
               localStorage.setItem('theme', theme);
             }
             
-            updateActiveThemeButton(themeButtons, button);
-          });
-        });
-        
-        // Update active theme button UI
-        function updateActiveThemeButton(buttons, activeButton) {
-          buttons.forEach(function(btn) {
+            updateActiveThemeButton(theme);
+	  });
+	});
+	
+	// Update active theme button UI
+	function updateActiveThemeButton(activeTheme) {
+	  // Remove active class and hide checkmark from all buttons
+	  themeButtons.forEach(function(btn) {
+            // Remove active class from both the button and its parent li
             btn.classList.remove('active');
+            if (btn.parentElement) {
+              btn.parentElement.classList.remove('active');
+            }
+            
+            // Hide the checkmark
             var checkIcon = btn.querySelector('.bi.ms-auto');
             if (checkIcon) {
               checkIcon.classList.add('d-none');
             }
-          });
-          
-          activeButton.classList.add('active');
-          var activeCheckIcon = activeButton.querySelector('.bi.ms-auto');
-          if (activeCheckIcon) {
-            activeCheckIcon.classList.remove('d-none');
-          }
-        }
-        
-        // Apply saved theme
-        var storedTheme = localStorage.getItem('theme') || 'auto';
-        
-        if (storedTheme === 'auto') {
-          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          document.documentElement.setAttribute('data-bs-theme', systemTheme);
-        } else {
-          document.documentElement.setAttribute('data-bs-theme', storedTheme);
-        }
-        
-        // Mark the active theme button
-        themeButtons.forEach(function(button) {
-          if (button.getAttribute('data-bs-theme-value') === storedTheme) {
-            button.classList.add('active');
-            var checkIcon = button.querySelector('.bi.ms-auto');
-            if (checkIcon) {
-              checkIcon.classList.remove('d-none');
-            }
-          }
-        });
-        
-        // Handle "active" class for navigation
-        document.body.addEventListener('htmx:afterSwap', function(event) {
-          // Get the current URL path
-          const currentPath = window.location.pathname;
-          
-          // Remove "active" class from all nav links
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('active');
-          });
-          
-          // Add "active" class to matching link
-          document.querySelectorAll('a.nav-link[hx-get]').forEach(function(link) {
-            const linkPath = link.getAttribute('hx-get');
-            if (linkPath === currentPath) {
-              link.classList.add('active');
+	  });
+	  
+	  // Add active class and show checkmark for the selected theme button
+	  themeButtons.forEach(function(btn) {
+            if (btn.getAttribute('data-bs-theme-value') === activeTheme) {
+              btn.classList.add('active');
+              if (btn.parentElement) {
+		btn.parentElement.classList.add('active');
+              }
               
-              // Expand parent accordion if needed
-              const accordionItem = link.closest('.accordion-collapse');
-              if (accordionItem && !accordionItem.classList.contains('show')) {
-                accordionItem.classList.add('show');
-                const controlBtn = document.querySelector(`[data-bs-target="#${accordionItem.id}"]`);
-                if (controlBtn) {
-                  controlBtn.classList.add('active');
-                  controlBtn.setAttribute('aria-expanded', 'true');
-                }
+              var checkIcon = btn.querySelector('.bi.ms-auto');
+              if (checkIcon) {
+		checkIcon.classList.remove('d-none');
               }
             }
-          });
-        });
-        
-        // Automatically expand Status submenu initially
-        if (window.location.pathname === '/' || window.location.pathname === '/status') {
-          var statusSubmenu = document.getElementById('statusSubmenu');
-          if (statusSubmenu && !statusSubmenu.classList.contains('show')) {
-            statusSubmenu.classList.add('show');
-            const statusBtn = document.querySelector('[data-bs-target="#statusSubmenu"]');
-            if (statusBtn) {
-              statusBtn.classList.add('active');
-              statusBtn.setAttribute('aria-expanded', 'true');
-            }
-          }
-        }
+	  });
+	}
+	
+	// Apply saved theme on page load
+	var storedTheme = localStorage.getItem('theme') || 'auto';
+	
+	if (storedTheme === 'auto') {
+	  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	  document.documentElement.setAttribute('data-bs-theme', systemTheme);
+	} else {
+	  document.documentElement.setAttribute('data-bs-theme', storedTheme);
+	}
+	
+	// Mark the active theme button
+	updateActiveThemeButton(storedTheme);
       });
     </script>
   </body>
