@@ -2,10 +2,12 @@
 <html lang="en" data-bs-theme="auto">
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <script src="/assets/js/htmx.min.js"></script>
     <style>
       :root {
         --login-bg: #fff;          /* Light background */
@@ -62,14 +64,10 @@
     <div class="container my-auto">
       <div class="login-form">
         <h2 class="text-center"><i class="bi bi-person-circle profile-icon me-2"></i>Login</h2>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-danger">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-        <form action="/login" method="post">
+        {{ if .ErrorMessage }}
+        <div class="alert alert-danger">{{ .ErrorMessage }}</div>
+        {{ end }}
+        <form hx-post="/login" hx-push-url="true">
           <div class="mb-3">
             <label for="username" class="form-label">Username</label>
             <input type="text" class="form-control" id="username" name="username" value="admin" required>
@@ -83,55 +81,43 @@
       </div>
 
       <div class="theme-switcher">
-	<input type="checkbox" id="themeToggle" class="btn-check">
-	<label class="btn btn-outline-secondary" for="themeToggle" title="Toggle theme">
+        <input type="checkbox" id="themeToggle" class="btn-check">
+        <label class="btn btn-outline-secondary" for="themeToggle" title="Toggle theme">
           <i class="bi bi-moon-stars"></i>
           <i class="bi bi-sun d-none"></i>
-	</label>
+        </label>
       </div>
-
     </div>
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 
+    <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Theme switching script (same as in layout, but simplified) -->
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-	const themeToggle = document.getElementById('themeToggle');
-	const currentTheme = localStorage.getItem('theme') || 'light'; // Default to light theme if nothing is stored
-
-	// Apply the current theme on initial load
-	document.documentElement.setAttribute('data-bs-theme', currentTheme);
-	themeToggle.checked = (currentTheme === 'dark');
-
-	// Listen for changes in the toggle switch
-	themeToggle.addEventListener('change', function() {
-	  if (this.checked) {
-	    document.documentElement.setAttribute('data-bs-theme', 'dark');
-	    localStorage.setItem('theme', 'dark');
-	  } else {
-	    document.documentElement.setAttribute('data-bs-theme', 'light');
-	    localStorage.setItem('theme', 'light');
-	  }
-	});
-
-	// Optional: Handle system theme changes if you want to keep supporting the 'auto' mode
-	function updateTheme() {
-	  const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-	  document.documentElement.setAttribute('data-bs-theme', theme);
-	  themeToggle.checked = (theme === 'dark');
-	  localStorage.setItem('theme', theme); // Store theme change
-	}
-
-	const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-	themeMediaQuery.addEventListener('change', function() {
-	  updateTheme();
-	});
-
-	// Apply theme based on the system preferences initially if 'auto' is chosen
-	if (localStorage.getItem('theme') === 'auto' || !localStorage.getItem('theme')) {
-	  updateTheme();
-	}
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        // Apply the current theme
+        if (currentTheme === 'auto') {
+          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-bs-theme', systemTheme);
+          themeToggle.checked = (systemTheme === 'dark');
+        } else {
+          document.documentElement.setAttribute('data-bs-theme', currentTheme);
+          themeToggle.checked = (currentTheme === 'dark');
+        }
+        
+        // Handle theme toggle
+        themeToggle.addEventListener('change', function() {
+          if (this.checked) {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            localStorage.setItem('theme', 'light');
+          }
+        });
       });
     </script>
-
   </body>
 </html>

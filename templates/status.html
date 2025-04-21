@@ -1,14 +1,5 @@
-<script>
-  function makeClickable(text) {
-    const urlRegex = /(https?:\/\/[^\s]+)|(mailto:[^\s]+)/g;
-    return text.replace(urlRegex, function(url) {
-      return `<a href="${url}" target="_blank">${url}</a>`;
-    });
-  }
-</script>
-
+{{ define "content" }}
 <div class="row row-cols-1 row-cols-md-2 g-2">
-
   <div class="col">
     <div class="card">
       <div class="card-header">
@@ -19,61 +10,63 @@
           <tbody>
             <tr>
               <th scope="row">Hostname</th>
-              <td>{{ hostname }}</td>
+              <td>{{ .Hostname }}</td>
             </tr>
             <tr>
               <th scope="row">Model</th>
-              <td>{{ model }}</td>
+              <td>{{ .Model }}</td>
             </tr>
             <tr>
               <th scope="row">CPU Chipset</th>
-              <td>{{ cpu_chipset }}</td>
+              <td>{{ .CPUChipset }}</td>
             </tr>
             <tr>
               <th scope="row">CPU Frequency</th>
-              <td>{{ cpu_frequency }}</td>
+              <td>{{ .CPUFrequency }}</td>
             </tr>
             <tr>
               <th scope="row">Internal Storage</th>
-              <td>{{ disk.formatted }} GB</td>
+              <td>{{ .Disk.Formatted }}</td>
             </tr>
             <tr>
               <th scope="row">Current Time</th>
-              <td>{{ current_time }}</td>
+              <td>{{ .CurrentTime }}</td>
             </tr>
             <tr>
               <th scope="row">Uptime</th>
-              <td>{{ uptime }}</td>
+              <td>{{ .Uptime }}</td>
             </tr>
             <tr>
               <th scope="row">CPU Usage</th>
-              <td>{{ cpu_usage }}%</td>
+              <td>{{ .CPUUsage }}%</td>
             </tr>
             <tr>
               <th scope="row">CPU Load <small>(1/5/15 mins)</small></th>
-              <td>{{ load_average[0] }} / {{ load_average[1] }} / {{ load_average[2] }}</td>
+              <td>{{ index .LoadAverage 0 }} / {{ index .LoadAverage 1 }} / {{ index .LoadAverage 2 }}</td>
             </tr>
-	    <tr>
-	      <th scope="row">Memory Usage</th>
-	      <td>
-		{{ memory.formatted }}
-		<div class="progress">
-		  <div class="progress-bar" role="progressbar" style="width: {{ memory.percent }}%" aria-valuenow="{{ memory.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-		</div>
-	      </td>
-	    </tr>
-	    <tr>
-	      <th scope="row">Disk Storage</th>
-	      <td>
-		{{ disk.formatted }}
-		<div class="progress">
-		  <div class="progress-bar" role="progressbar" style="width: {{ disk.percent }}%" aria-valuenow="{{ disk.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-		</div>
-	      </td>
-	    </tr>
+            <tr>
+              <th scope="row">Memory Usage</th>
+              <td>
+                {{ .Memory.Formatted }}
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" style="width: {{ .Memory.Percent }}%" 
+                       aria-valuenow="{{ .Memory.Percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Disk Storage</th>
+              <td>
+                {{ .Disk.Formatted }}
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" style="width: {{ .Disk.Percent }}%" 
+                       aria-valuenow="{{ .Disk.Percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </td>
+            </tr>
             <tr>
               <th scope="row">CPU Temperature</th>
-              <td>{{ cpu_temperature }}</td>
+              <td>{{ .CPUTemperature }}</td>
             </tr>
           </tbody>
         </table>
@@ -86,17 +79,44 @@
       <div class="card-header">Version Information</div>
       <div class="card-body">
         <table class="table table-hover">
-	  {% for key, value in version_info.items() %}
-	  <tr>
-	    <td><strong>{{ key }}</strong></td>
-	    <td id="value-{{ loop.index }}">{{ value }}</td>
-            <script>
-              document.getElementById('value-{{ loop.index }}').innerHTML = makeClickable(document.getElementById('value-{{ loop.index }}').textContent);
-            </script>
-	  </tr>
-	  {% endfor %}
-	</table>
+          {{ range $key, $value := .VersionInfo }}
+          <tr>
+            <td><strong>{{ $key }}</strong></td>
+            <td class="version-value">{{ $value }}</td>
+          </tr>
+          {{ end }}
+        </table>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Auto-refreshing the status page every 60 seconds -->
+<div hx-get="/status" 
+     hx-trigger="every 60s"
+     hx-target="#content"
+     hx-swap="innerHTML">
+</div>
+
+<!-- JS function for handling URLs in the status content -->
+<script>
+  // Make URLs clickable
+  document.addEventListener('DOMContentLoaded', function() {
+    const makeClickable = function(element) {
+      const urlRegex = /(https?:\/\/[^\s]+)|(mailto:[^\s]+)/g;
+      const content = element.textContent;
+      element.innerHTML = content.replace(urlRegex, function(url) {
+        return `<a href="${url}" target="_blank">${url}</a>`;
+      });
+    };
+    
+    // Process all version value cells
+    document.querySelectorAll('.version-value').forEach(makeClickable);
+    
+    // Set up event listener for future updates via HTMX
+    document.body.addEventListener('htmx:afterSwap', function() {
+      document.querySelectorAll('.version-value').forEach(makeClickable);
+    });
+  });
+</script>
+{{ end }}

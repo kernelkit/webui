@@ -1,68 +1,62 @@
-<div class="row row-cols-1 row-cols-md-2 g-2">
-  <!-- Log File Content -->
-  <div class="col-md-9">
-    <div class="card">
-      <div class="card-header" id="log-file-title"></div>
-      <div class="card-body" style="overflow-y: scroll; height: calc(100vh - 7rem);">
-        <pre id="log-content"></pre>
+{{define "content"}}
+<div class="row">
+  <div class="col-md-3">
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <span>Log Files</span>
+          <button class="btn btn-sm btn-outline-secondary refresh-logs" title="Refresh log list"
+                  hx-get="/log" 
+                  hx-target="#content"
+                  hx-swap="innerHTML">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush" id="log-list">
+          {{range .Files}}
+            <a class="list-group-item list-group-item-action {{if eq . $.ActiveLog}}active{{end}}"
+               hx-get="/log?file={{.}}"
+               hx-target="#content"
+               hx-swap="innerHTML">
+              {{.}}
+            </a>
+          {{else}}
+            <div class="list-group-item text-center text-muted">No log files found</div>
+          {{end}}
+        </div>
       </div>
     </div>
   </div>
-  <!-- List of Available Log Files -->
-  <div class="col-md-3">
+  
+  <div class="col-md-9">
     <div class="card">
       <div class="card-header">
-        Available Log Files
+        <div class="d-flex justify-content-between align-items-center">
+          <span>{{if .ActiveLog}}{{.ActiveLog}}{{else}}Select a log file{{end}}</span>
+          {{if .ActiveLog}}
+          <div>
+            <button class="btn btn-sm btn-outline-secondary refresh-content" title="Refresh log content"
+                    hx-get="/log?file={{.ActiveLog}}" 
+                    hx-target="#content"
+                    hx-swap="innerHTML">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary tail-log" title="Tail log (last 100 lines)"
+                    hx-get="/log?file={{.ActiveLog}}&tail=100" 
+                    hx-target="#content"
+                    hx-swap="innerHTML">
+              <i class="bi bi-arrow-down-square"></i> Tail
+            </button>
+          </div>
+          {{end}}
+        </div>
       </div>
-      <div class="card-body" style="overflow-y: scroll; height: calc(100vh - 7rem); padding: 0;">
-        <ul id="log-list" class="list-group list-group-flush">
-          <!-- Log files will be listed here -->
-        </ul>
+      <div class="card-body p-0">
+        <pre id="log-content" class="m-0 p-3" style="max-height: 70vh; overflow-y: auto;">{{if .Content}}{{.Content}}{{else}}{{if .ActiveLog}}Loading...{{else}}No log file selected{{end}}{{end}}</pre>
       </div>
     </div>
   </div>
 </div>
-
-<script>
-  $(document).ready(function() {
-    fetchLogs();
-    fetchLogFile('syslog');  // Fetch and display syslog on page load
-
-    function fetchLogs() {
-      $.getJSON('/logs', function(data) {
-	$('#log-list').empty();
-	data.forEach(function(file) {
-          var listItem = $('<li class="list-group-item">' + file + '</li>');
-          listItem.click(function() {
-            $('.list-group-item').removeClass('active');  // Remove the active class from all items
-            $(this).addClass('active');  // Add the active class to the clicked item
-            fetchLogFile($(this).text().trim());  // Call to load the selected file
-          });
-          $('#log-list').append(listItem);
-          if (file === 'syslog') {
-            listItem.addClass('active');  // Automatically mark syslog as active on load
-            setTimeout(function() {
-              listItem[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 500);  // Delay to ensure the list is fully rendered
-          }
-	});
-      });
-    }
-
-    function fetchLogFile(filename) {
-      $.get('/logs/' + filename, function(data) {
-        $('#log-content').text(data);
-
-	// Update the card title to reflect the currently viewed log file
-	$('#log-file-title').text(filename);
-
-	// Use setTimeout to ensure the DOM has updated
-	setTimeout(function() {
-	  var logContentDiv = document.getElementById('log-content');
-	  // Scroll the log content into view
-	  logContentDiv.scrollIntoView(false);  // Scrolls to the bottom of the element
-	}, 50); // Short delay to ensure the content is rendered
-      });
-      }
-  });
-</script>
+{{end}}

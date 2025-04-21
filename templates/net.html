@@ -1,3 +1,4 @@
+{{ define "content" }}
 <div class="row row-cols-1 row-cols-md-2 g-2">
   <div class="col w-100">
     <div class="card">
@@ -13,22 +14,22 @@
             </tr>
           </thead>
           <tbody>
-            {% for iface in interfaces %}
+            {{ range .Interfaces }}
             <tr>
-              <td>{{ iface.ifname }}</td>
-              <td style="width:10em;"">
-                {{ iface.address }}
+              <td>{{ .Name }}</td>
+              <td style="width:10em;">
+                {{ .HWAddr }}
               </td>
-              <td style="width:5em;" class="{{ 'bg-success' if iface.operstate == 'UP' else 'bg-danger' }}">
-                {{ iface.operstate }}
+              <td style="width:5em;" class="{{ if eq .State "UP" }}bg-success{{ else }}bg-danger{{ end }}">
+                {{ .State }}
               </td>
               <td>
-                {% for addr in iface.addr_info %}
-                <div>{{ addr.local }}/{{ addr.prefixlen }}</div>
-                {% endfor %}
+                {{ range .Addresses }}
+                <div>{{ .Address }}/{{ .PrefixLen }}</div>
+                {{ end }}
               </td>
             </tr>
-            {% endfor %}
+            {{ end }}
           </tbody>
         </table>
       </div>
@@ -50,23 +51,15 @@
             </tr>
           </thead>
           <tbody>
-            {% for route in routes4 %}
+            {{ range .Routes4 }}
             <tr>
-              <td>{{ route.dst }}</td>
-              <td>
-                {{ route.gateway }}
-              </td>
-              <td>
-                {{ route.protocol }}
-              </td>
-              <td>
-                {{ route.metric }}
-              </td>
-              <td>
-                {{ route.dev }}
-              </td>
+              <td>{{ .Destination }}</td>
+              <td>{{ .Gateway }}</td>
+              <td>{{ .Protocol }}</td>
+              <td>{{ .Metric }}</td>
+              <td>{{ .Device }}</td>
             </tr>
-            {% endfor %}
+            {{ end }}
           </tbody>
         </table>
       </div>
@@ -88,26 +81,26 @@
             </tr>
           </thead>
           <tbody>
-            {% for route in routes6 %}
+            {{ range .Routes6 }}
             <tr>
-              <td>{{ route.dst }}</td>
-              <td>
-                {{ route.gateway }}
-              </td>
-              <td>
-                {{ route.protocol }}
-              </td>
-              <td>
-                {{ route.metric }}
-              </td>
-              <td>
-                {{ route.dev }}
-              </td>
+              <td>{{ .Destination }}</td>
+              <td>{{ .Gateway }}</td>
+              <td>{{ .Protocol }}</td>
+              <td>{{ .Metric }}</td>
+              <td>{{ .Device }}</td>
             </tr>
-            {% endfor %}
+            {{ end }}
           </tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Auto-refresh network info every 60 seconds -->
+<div hx-get="/net" 
+     hx-trigger="every 60s"
+     hx-target="#content"
+     hx-swap="innerHTML">
+</div>
+{{ end }}

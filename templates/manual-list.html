@@ -1,0 +1,29 @@
+{{ define "content" }}
+<div class="card">
+  <div class="card-header">
+    <h4>Manual Pages</h4>
+  </div>
+  <div class="card-body">
+    {{ if .Files }}
+      <div class="list-group">
+        {{ range .Files }}
+          <a href="#" 
+             class="list-group-item list-group-item-action"
+             hx-get="/manual/{{ . }}"
+             hx-target="#content"
+             hx-push-url="true">
+            <i class="bi bi-file-earmark-text me-2"></i>manual title here
+          </a>
+        {{ end }}
+      </div>
+    {{ else }}
+      <div class="alert alert-info">
+        No manual pages are available. 
+        <p class="mt-2">
+          To add manual pages, create markdown (.md) files in the 'manual' directory.
+        </p>
+      </div>
+      {{ end }}
+  </div>
+</div>
+{{ end }}
