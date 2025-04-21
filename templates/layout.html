@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Management Interface</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <!-- Include HTMX -->
+    <script src="/assets/js/htmx.min.js"></script>
+    <style>
+      :root[data-bs-theme="light"] {
+        --navbar-bg: #ffffff;
+        --navbar-text: #343a40;
+        --navbar-shadow: rgba(0, 0, 0, 0.1);
+        --sidebar-bg: #f8f8f8;
+        --sidebar-color: #333;
+        --icon-color: #333;
+        --link-hover-bg: #007bff;
+        --link-hover-color: #fff;
+        --link-active-bg: #f8f9fa;
+        --link-active-color: #0056b3;
+      }
+
+      :root[data-bs-theme="dark"] {
+        --navbar-bg: #24292f;
+        --navbar-text: #f8f9fa;
+        --navbar-shadow: rgba(255, 255, 255, 0.1);
+        --sidebar-bg: #252a2e;
+        --sidebar-color: #ccc;
+        --icon-color: #ccc;
+        --link-hover-bg: #0062cc;
+        --link-hover-color: #e2e6ea;
+        --link-active-bg: #343a40;
+        --link-active-color: #72abff;
+        --bg-danger-text-color: #000;
+        --bg-success-text-color: #000;
+      }
+
+      .bg-danger, .table .bg-danger {
+        color: var(--bg-danger-text-color, #fff);
+        background-color: #dc3545;
+      }
+
+      .bg-success, .table .bg-success {
+        color: var(--bg-success-text-color, #fff);
+        background-color: #28a745;
+      }
+
+      .container-xxl {
+        height: 100vh;
+        padding: 58px 10px 10px 10px;
+        display: flex;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        margin: 0;
+      }
+
+      .navbar {
+        position: fixed;
+        padding: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--navbar-bg);
+        color: var(--navbar-text);
+        z-index: 1100;
+        box-shadow: 0 4px 6px -1px var(--navbar-shadow);
+      }
+      .navbar-brand {
+        padding: 5px;
+      }
+      .navbar-brand img {
+        height: 40px;
+      }
+      .navbar-nav .dropdown-menu {
+        position: absolute;
+        left: auto;
+        right: 0;
+      }
+
+      .offcanvas {
+        background-color: var(--sidebar-bg);
+        color: var(--sidebar-text);
+        z-index: 1200;
+      }
+      .offcanvas-body {
+        padding: 0;
+      }
+
+      .bi {
+        color: var(--icon-color);
+      }
+      .dropdown-menu .bi svg {
+        color: var(--icon-color);
+        fill: currentColor;
+      }
+
+      .nav-link {
+        font-weight: 500;
+        color: var(--sidebar-color);
+        display: flex;       /* Ensures the icon and text are aligned on the same line */
+        align-items: center; /* Centers the items vertically */
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .nav-link .feather {
+        margin-right: 4px;
+        color: #727272;
+      }
+
+      .nav-link.active {
+        color: var(--link-active-color);
+        /* background-color: var(--link-active-bg); */
+      }
+      .nav-link:hover {
+        color: var(--link-hover-color);
+        background-color: var(--link-hover-bg);
+        text-decoration: none;     /* Remove link underline on hover */
+        /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */
+      }
+      .main-content {
+        flex: 1;
+        flex-grow: 1;
+        z-index: 1;
+        padding-top: 2px;
+      }
+
+      .bottom-nav-item {
+        margin-top: auto;
+        padding-bottom: 0px;
+      }
+
+      /* Log file viewer */
+        .list-group-item {
+        border: none;  /* Remove borders for a cleaner look */
+        color: var(--sidebar-color);
+      }
+      .list-group-item.active {
+        color: var(--link-active-color);
+        background-color: var(--link-active-bg);
+      }
+      .list-group-item:hover {
+        cursor: pointer;
+        color: var(--link-hover-color);
+        background-color: var(--link-hover-bg);
+      }
+      .list-group-item:nth-of-type(odd) {
+        background-color: var(--sidebar-bg);
+      }
+      .list-group-item:nth-of-type(odd):hover {
+        color: var(--link-hover-color);
+        background-color: var(--link-hover-bg);
+      }
+
+      #log-list {
+        white-space: nowrap;  /* Keep file names on a single line */
+        overflow-x: auto;     /* Allow horizontal scrolling if needed */
+      }
+      #log-content {
+        white-space: pre-wrap; /* Maintains whitespace but allows wrapping */
+        overflow-y: auto;      /* Ensures scrollbar is available if needed */
+      }
+      /* /Log file viewer */
+
+      /* CSS to ensure sidebar is always visible on larger screens */
+      @media (min-width: 992px) { /* Adjust this breakpoint as needed */
+        .container-xxl {
+          --bs-gutter-x: 0;  /* Removes horizontal gutters on large screens */
+        }
+        .offcanvas {
+	  position: fixed;  /* Fixed positioning to keep it in place */
+	  top: 54px;        /* Assuming your navbar is 54px high */
+	  left: 0;          /* Ensure the sidebar starts exactly from the left edge */
+	  bottom: 0;        /* Stretch to the bottom of the viewport */
+	  width: 220px;     /* Or whatever width you prefer */
+	  height: calc(100vh - 54px);  /* Adjust height taking into account the navbar */
+        }
+        .main-content {
+          margin-left: 220px;
+          flex-grow: 1;
+        }
+        #bdSidebar {
+	  position: fixed;          /* Reset position for large screens */
+	  top: 54px;
+	  width: 220px;             /* Set a fixed width or percentage as needed */
+	  max-width: 100%;          /* Ensures the sidebar doesn't exceed its container */
+	  transform: none !important;     /* Override any transform from offcanvas */
+	  visibility: visible !important; /* Ensure sidebar is always visible */
+	  background-color: var(--sidebar-bg);
+        }
+        #bdSidebar .offcanvas-header {
+          display: none; /* Hide the header with the title and close button */
+        }
+        #bdSidebar .offcanvas-body {
+          padding: var(--bs-offcanvas-padding-y) var(--bs-offcanvas-padding-x);
+          left: 0;
+        }
+
+        .offcanvas-backdrop {
+          display: none; /* Hide the backdrop on larger screens */
+        }
+        .offcanvas.show {
+          transform: none; /* Cancel any transformation when shown */
+        }
+      }
+  </style>
+  </head>
+  <body>
+    <header class="navbar navbar-expand-lg sticky-top">
+      <nav class="container-fluid flex-wrap flex-lg-nowrap" aria-label="Main navigation">
+        <a class="navbar-brand me-0 px-3" href="#">
+          <img src="/assets/img/logo-plain.svg" alt="Logo">
+        </a>
+
+        <div class="collapse navbar-collapse justify-content-end">
+          <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person me-1"></i>{{ .Username }}
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center" data-theme-value="light" aria-pressed="false">
+                    <i class="bi bi-sun me-2"></i>Light
+                    <i class="bi bi-check2 ms-auto d-none"></i>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center" data-theme-value="dark" aria-pressed="false">
+                    <i class="bi bi-moon-stars me-2"></i>Dark
+                    <i class="bi bi-check2 ms-auto d-none"></i>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" class="dropdown-item d-flex align-items-center active" data-theme-value="auto" aria-pressed="true">
+                    <i class="bi bi-circle-half me-2"></i>Auto
+                    <i class="bi bi-check2 ms-auto d-none"></i>
+                  </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+        <div class="bd-navbar-toggle">
+          <button class="navbar-toggler px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#bdSidebar" aria-controls="bdSidebar" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+            <span class="d-none fs-6 pe-1">Show menu</span>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <div class="container-xxl">
+      <div class="offcanvas offcanvas-start" tabindex="-1" id="bdSidebar" aria-labelledby="bdSidebarLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="bdSidebarLabel">Menu</h5>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <!-- Accordion wrapper -->
+          <div class="accordion" id="sidebarAccordion">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <div class="nav-link active" role="button" aria-current="page" data-bs-toggle="collapse" data-bs-target="#statusSubmenu" aria-expanded="false" aria-controls="statusSubmenu">
+                  <i class="bi bi-speedometer2 me-2"></i>Status
+                </div>
+                <div class="accordion-collapse collapse" id="statusSubmenu" data-bs-parent="#sidebarAccordion">
+                  <ul class="nav flex-column ms-3">
+                    <li class="nav-item">
+                      <a class="nav-link active" 
+                         hx-get="/status"
+                         hx-target="#content"
+                         hx-push-url="true"
+                         hx-trigger="click">
+                        <i class="bi bi-layout-text-sidebar-reverse me-2"></i>Overview
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" 
+                         hx-get="/net"
+                         hx-target="#content"
+                         hx-push-url="true"
+                         hx-trigger="click">
+                        <i class="bi bi-diagram-3 me-2"></i>Networking
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" 
+                         hx-get="/log"
+                         hx-target="#content"
+                         hx-push-url="true"
+                         hx-trigger="click">
+                        <i class="bi bi-journal-text me-2"></i>View Logs
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="nav-item">
+                <div class="nav-link" role="button" data-bs-toggle="collapse" data-bs-target="#configSubmenu" aria-expanded="false" aria-controls="configSubmenu">
+                  <i class="bi bi-gear me-2"></i>Configuration
+                </div>
+                <div id="configSubmenu" class="accordion-collapse collapse" data-bs-parent="#sidebarAccordion">
+                  <ul class="nav flex-column ms-3">
+                    <li class="nav-item">
+                      <a class="nav-link"
+                         hx-get="/system-config"
+                         hx-target="#content"
+                         hx-push-url="true"
+                         hx-trigger="click">
+                        <i class="bi bi-cpu me-2"></i>System
+                      </a>
+                    </li>
+                    <!-- Other menu items with similar HTMX attributes -->
+                  </ul>
+                </div>
+              </li>
+
+              <!-- Other menu sections with similar HTMX attributes -->
+            </ul>
+
+            <!-- Mobile menu section with similar theme buttons -->
+          </div>
+        </div>
+      </div>
+
+      <div class="main-content" id="content">
+        <!-- Dynamic content gets loaded here -->
+        {{ template "content" .Content }}
+      </div>
+    </div><!-- container-xxl -->
+
+    <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Session keep-alive with HTMX -->
+    <div hx-get="/keepalive" 
+         hx-trigger="every 5m"
+         hx-swap="none">
+    </div>
+    
+    <!-- Auto-logout after inactivity -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        let timeoutId;
+        
+        function resetTimer() {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            window.location.href = '/logout';
+          }, 600000); // 10 minutes
+        }
+        
+        // Reset timer on user activity
+        window.onload = resetTimer;
+        window.onmousemove = resetTimer;
+        window.onmousedown = resetTimer;
+        window.ontouchstart = resetTimer;
+        window.onclick = resetTimer;
+        window.onkeypress = resetTimer;
+        window.addEventListener('scroll', resetTimer, true);
+      });
+    </script>
+
+    <!-- Theme switching script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Theme buttons
+        var themeButtons = document.querySelectorAll('[data-theme-value]');
+        
+        themeButtons.forEach(function(button) {
+          button.addEventListener('click', function() {
+            var theme = button.getAttribute('data-theme-value');
+            
+            if (theme === 'auto') {
+              const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              document.documentElement.setAttribute('data-bs-theme', systemTheme);
+              localStorage.setItem('theme', 'auto');
+            } else {
+              document.documentElement.setAttribute('data-bs-theme', theme);
+              localStorage.setItem('theme', theme);
+            }
+            
+            updateActiveThemeButton(themeButtons, button);
+          });
+        });
+        
+        // Update active theme button UI
+        function updateActiveThemeButton(buttons, activeButton) {
+          buttons.forEach(function(btn) {
+            btn.classList.remove('active');
+            var checkIcon = btn.querySelector('.bi.ms-auto');
+            if (checkIcon) {
+              checkIcon.classList.add('d-none');
+            }
+          });
+          
+          activeButton.classList.add('active');
+          var activeCheckIcon = activeButton.querySelector('.bi.ms-auto');
+          if (activeCheckIcon) {
+            activeCheckIcon.classList.remove('d-none');
+          }
+        }
+        
+        // Apply saved theme
+        var storedTheme = localStorage.getItem('theme') || 'auto';
+        
+        if (storedTheme === 'auto') {
+          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-bs-theme', systemTheme);
+        } else {
+          document.documentElement.setAttribute('data-bs-theme', storedTheme);
+        }
+        
+        // Mark the active theme button
+        themeButtons.forEach(function(button) {
+          if (button.getAttribute('data-theme-value') === storedTheme) {
+            button.classList.add('active');
+            var checkIcon = button.querySelector('.bi.ms-auto');
+            if (checkIcon) {
+              checkIcon.classList.remove('d-none');
+            }
+          }
+        });
+        
+        // Handle "active" class for navigation
+        document.body.addEventListener('htmx:afterOnLoad', function(event) {
+          // Find the target URL from the event
+          const targetUrl = event.detail.pathInfo.requestPath;
+          
+          // Remove "active" class from all nav links
+          document.querySelectorAll('.nav-link').forEach(function(link) {
+            link.classList.remove('active');
+          });
+          
+          // Add "active" class to the nav link that matches the target URL
+          document.querySelectorAll('.nav-link[hx-get]').forEach(function(link) {
+            if (link.getAttribute('hx-get') === targetUrl) {
+              link.classList.add('active');
+            }
+          });
+        });
+        
+        // Auto-expand Status submenu
+        var statusSubmenu = document.getElementById('statusSubmenu');
+        var statusLinks = statusSubmenu.querySelectorAll('.nav-link');
+        
+        statusSubmenu.classList.add('show');
+        
+        // By default, load the status page
+        if (window.location.pathname === '/' || window.location.pathname === '') {
+          // Trigger a click on the first status link (Overview)
+          statusLinks[0].click();
+        }
+      });
+    </script>
+  </body>
+</html>

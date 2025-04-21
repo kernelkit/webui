@@ -1,18 +1,122 @@
-{{ define "status.html" }}
-<div class="container mt-4">
-  <h1>System Status</h1>
-  
-  <!-- System status content - will be dynamically updated with HTMX -->
-  <div id="system-status-content" 
-       hx-get="/api/status/refresh" 
-       hx-trigger="load, every 30s">
-    <!-- Loading placeholder -->
-    <div class="text-center my-5">
-      <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
+{{ define "content" }}
+<div class="row row-cols-1 row-cols-md-2 g-2">
+  <div class="col">
+    <div class="card">
+      <div class="card-header">
+        System Information
       </div>
-      <p class="mt-2">Loading system status...</p>
+      <div class="card-body">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th scope="row">Hostname</th>
+              <td>{{ .Hostname }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Model</th>
+              <td>{{ .Model }}</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Chipset</th>
+              <td>{{ .CPUChipset }}</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Frequency</th>
+              <td>{{ .CPUFrequency }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Internal Storage</th>
+              <td>{{ .Disk.Formatted }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Current Time</th>
+              <td>{{ .CurrentTime }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Uptime</th>
+              <td>{{ .Uptime }}</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Usage</th>
+              <td>{{ .CPUUsage }}%</td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Load <small>(1/5/15 mins)</small></th>
+              <td>{{ index .LoadAverage 0 }} / {{ index .LoadAverage 1 }} / {{ index .LoadAverage 2 }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Memory Usage</th>
+              <td>
+                {{ .Memory.Formatted }}
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" style="width: {{ .Memory.Percent }}%" 
+                       aria-valuenow="{{ .Memory.Percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Disk Storage</th>
+              <td>
+                {{ .Disk.Formatted }}
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" style="width: {{ .Disk.Percent }}%" 
+                       aria-valuenow="{{ .Disk.Percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">CPU Temperature</th>
+              <td>{{ .CPUTemperature }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <div class="card-header">Version Information</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          {{ range $key, $value := .VersionInfo }}
+          <tr>
+            <td><strong>{{ $key }}</strong></td>
+            <td class="version-value">{{ $value }}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Auto-refreshing the status page every 60 seconds -->
+<div hx-get="/status" 
+     hx-trigger="every 60s"
+     hx-target="#content"
+     hx-swap="innerHTML">
+</div>
+
+<!-- JS function for handling URLs in the status content -->
+<script>
+  // Make URLs clickable
+  document.addEventListener('DOMContentLoaded', function() {
+    const makeClickable = function(element) {
+      const urlRegex = /(https?:\/\/[^\s]+)|(mailto:[^\s]+)/g;
+      const content = element.textContent;
+      element.innerHTML = content.replace(urlRegex, function(url) {
+        return `<a href="${url}" target="_blank">${url}</a>`;
+      });
+    };
+    
+    // Process all version value cells
+    document.querySelectorAll('.version-value').forEach(makeClickable);
+    
+    // Set up event listener for future updates via HTMX
+    document.body.addEventListener('htmx:afterSwap', function() {
+      document.querySelectorAll('.version-value').forEach(makeClickable);
+    });
+  });
+</script>
 {{ end }}

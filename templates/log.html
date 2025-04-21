@@ -1,0 +1,42 @@
+{{ define "content" }}
+<div class="row row-cols-1 row-cols-md-2 g-2">
+  <!-- Log File Content -->
+  <div class="col-md-9">
+    <div class="card">
+      <div class="card-header" id="log-file-title">Log Content</div>
+      <div class="card-body" style="overflow-y: scroll; height: calc(100vh - 7rem);">
+        <pre id="log-content">{{ .LogContent }}</pre>
+      </div>
+    </div>
+  </div>
+  
+  <!-- List of Available Log Files -->
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        Available Log Files
+      </div>
+      <div class="card-body" style="overflow-y: scroll; height: calc(100vh - 7rem); padding: 0;">
+        <ul id="log-list" class="list-group list-group-flush">
+          {{ range .LogFiles }}
+          <li class="list-group-item {{ if eq . $.CurrentLog }}active{{ end }}"
+              hx-get="/logs/{{ . }}"
+              hx-target="#log-content"
+              hx-swap="innerHTML"
+              hx-trigger="click"
+              hx-on::after-request="
+                     document.querySelectorAll('#log-list .list-group-item').forEach(item => {
+                     item.classList.remove('active');
+                     });
+                     this.classList.add('active');
+                     document.getElementById('log-file-title').textContent = '{{ . }}';
+		     ">
+            {{ . }}
+          </li>
+          {{ end }}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}

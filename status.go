@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"html/template"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -47,24 +47,15 @@ type DiskData struct {
 	Percent   float64
 }
 
-// StatusHandler handles the status page
-func statusHandler(tmpl *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		info, err := getSystemInfo()
-		if err != nil {
-			http.Error(w, "Failed to get system information", http.StatusInternalServerError)
-			return
-		}
-
-		// Render template based on request type
-		if r.Header.Get("HX-Request") == "true" {
-			// Render just the content for HTMX
-			tmpl.ExecuteTemplate(w, "status.html", info)
-		} else {
-			// Render full page
-			tmpl.ExecuteTemplate(w, "main.html", info)
-		}
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	info, err := getSystemInfo()
+	if err != nil {
+		log.Printf("Error getting system info: %v", err)
+		http.Error(w, "Failed to get system information", http.StatusInternalServerError)
+		return
 	}
+
+	renderPage(w, r, "status", info)
 }
 
 // getSystemInfo gathers system information
@@ -124,16 +115,18 @@ func getSystemInfo() (*SystemInfo, error) {
 // getVersionInfo reads version information from /etc/os-release
 func getVersionInfo() map[string]string {
 	versionInfo := make(map[string]string)
+	relinfo := "/etc/os-release"
 
-	file, err := os.Open("/etc/os-release")
+	file, err := os.Open(relinfo)
 	if err != nil {
+		log.Printf("Failed opening %s: %s", relinfo, err.Error())
 		versionInfo["ERROR"] = err.Error()
 		return versionInfo
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	re := regexp.MustCompile(`(\w+)=["\']?(.*?)["\']?`)
+	re := regexp.MustCompile(`^(\w+)=["']?(.*?)["']?$`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -144,6 +137,7 @@ func getVersionInfo() map[string]string {
 	}
 
 	if err := scanner.Err(); err != nil {
+		log.Printf("Failed reading %s: %s", relinfo, err.Error())
 		versionInfo["ERROR"] = err.Error()
 	}
 

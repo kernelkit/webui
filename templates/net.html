@@ -1,0 +1,106 @@
+{{ define "content" }}
+<div class="row row-cols-1 row-cols-md-2 g-2">
+  <div class="col w-100">
+    <div class="card">
+      <div class="card-header">Interfaces</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Interface</th>
+              <th style="width:10em;">MAC</th>
+              <th style="width:5em;">Status</th>
+              <th>Addresses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range .Interfaces }}
+            <tr>
+              <td>{{ .IfName }}</td>
+              <td style="width:10em;">
+                {{ .Address }}
+              </td>
+              <td style="width:5em;" class="{{ if eq .OperState "UP" }}bg-success{{ else }}bg-danger{{ end }}">
+                {{ .OperState }}
+              </td>
+              <td>
+                {{ range .AddrInfo }}
+                <div>{{ .Local }}/{{ .PrefixLen }}</div>
+                {{ end }}
+              </td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col w-100">
+    <div class="card">
+      <div class="card-header">IPv4 Routes</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Destination</th>
+              <th>Gateway</th>
+              <th>Protocol</th>
+              <th>Metric</th>
+              <th>Interface</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range .Routes4 }}
+            <tr>
+              <td>{{ .Dst }}</td>
+              <td>{{ .Gateway }}</td>
+              <td>{{ .Protocol }}</td>
+              <td>{{ .Metric }}</td>
+              <td>{{ .Dev }}</td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col w-100">
+    <div class="card">
+      <div class="card-header">IPv6 Routes</div>
+      <div class="card-body">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Destination</th>
+              <th>Gateway</th>
+              <th>Protocol</th>
+              <th>Metric</th>
+              <th>Interface</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range .Routes6 }}
+            <tr>
+              <td>{{ .Dst }}</td>
+              <td>{{ .Gateway }}</td>
+              <td>{{ .Protocol }}</td>
+              <td>{{ .Metric }}</td>
+              <td>{{ .Dev }}</td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Auto-refresh network info every 60 seconds -->
+<div hx-get="/net" 
+     hx-trigger="every 60s"
+     hx-target="#content"
+     hx-swap="innerHTML">
+</div>
+{{ end }}
