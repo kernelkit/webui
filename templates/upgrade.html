@@ -6,100 +6,416 @@
         <h4>System Upgrade</h4>
       </div>
       <div class="card-body">
-        <div class="alert alert-warning">
-          <i class="bi bi-exclamation-triangle me-2"></i>
-          <strong>Warning:</strong> Do not power off the device during the upgrade process. 
-          The system will automatically reboot when the upgrade is complete.
-        </div>
+        <!-- Initial UI Section -->
+        <div id="upgrade-info-section">
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Warning:</strong> Do not power off the device during the upgrade process. 
+            The system will automatically reboot when the upgrade is complete.
+          </div>
 
-        <!-- Current Firmware Information -->
-        <div class="mb-4">
-          <h5>Current Firmware Information</h5>
-          <table class="table table-sm">
-            <tbody>
-              <tr>
-                <th scope="row" style="width: 30%;">Firmware Version:</th>
-                <td>{{ .FirmwareVersion }}</td>
-              </tr>
-              <tr>
-                <th scope="row">Build Date:</th>
-                <td>{{ .BuildDate }}</td>
-              </tr>
-              <tr>
-                <th scope="row">Active Bootslot:</th>
-                <td>{{ .ActiveBootslot }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <!-- Current Firmware Information -->
+          <div class="mb-4">
+            <h5>Current Firmware Information</h5>
+            <table class="table table-sm">
+              <tbody>
+                <tr>
+                  <th scope="row" style="width: 30%;">Firmware Version:</th>
+                  <td>{{ .FirmwareVersion }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Build Date:</th>
+                  <td>{{ .BuildDate }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Active Bootslot:</th>
+                  <td>{{ .ActiveBootslot }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        <!-- Backup Configuration -->
-        <div class="mb-4">
-          <h5>Backup Current Configuration</h5>
-          <p>Download your current system configuration before upgrading.</p>
-          <a href="/download-config" 
-             class="btn btn-outline-primary"
-             hx-boost="false"
-             target="_blank">
-            <i class="bi bi-download me-2"></i>Download Configuration
-          </a>
-        </div>
+          <!-- Backup Configuration -->
+          <div class="mb-4">
+            <h5>Backup Current Configuration</h5>
+            <p>Download your current system configuration before upgrading.</p>
+            <a href="/download-config" 
+               class="btn btn-outline-primary"
+               hx-boost="false"
+               target="_blank">
+              <i class="bi bi-download me-2"></i>Download Configuration
+            </a>
+          </div>
 
-        <!-- Upload Firmware -->
-        <div class="mb-4">
-          <h5>Upload New Firmware</h5>
-          <form id="upgrade-form" 
-                hx-post="/upload-firmware" 
-                hx-encoding="multipart/form-data"
-                hx-target="#upgrade-status"
-                hx-swap="innerHTML"
-                hx-indicator="#loading-indicator">
-            
-            <div class="mb-3">
-              <label for="firmwareFile" class="form-label">Firmware Package (.pkg file)</label>
-              <input class="form-control" type="file" id="firmwareFile" name="firmware" accept=".pkg" required>
-              <div class="form-text">Select the firmware package file (.pkg) to install.</div>
+          <!-- Upload Firmware -->
+          <div class="mb-4">
+            <h5>Upload New Firmware</h5>
+            <form id="upgrade-form" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label for="firmwareFile" class="form-label">Firmware Package (.pkg file)</label>
+                <input class="form-control" type="file" id="firmwareFile" name="firmware" accept=".pkg" required>
+                <div class="form-text">Select the firmware package file (.pkg) to install.</div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="configFile" class="form-label">Configuration File (optional)</label>
+                <input class="form-control" type="file" id="configFile" name="config" accept=".cfg">
+                <div class="form-text">Optionally upload a previously backed-up configuration file.</div>
+              </div>
+              
+              <button type="button" id="upgrade-button" class="btn btn-primary" onclick="initiateUpgrade()">
+                <i class="bi bi-arrow-up-circle me-2"></i>Upload and Install
+              </button>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Upgrade Progress Section (Hidden Initially) -->
+        <div id="upgrade-progress-section" style="display:none;">
+          <div class="card">
+            <div class="card-header">
+              <h5>Installation Progress</h5>
             </div>
-            
-            <div class="mb-3">
-              <label for="configFile" class="form-label">Configuration File (optional)</label>
-              <input class="form-control" type="file" id="configFile" name="config" accept=".cfg">
-              <div class="form-text">Optionally upload a previously backed-up configuration file.</div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-arrow-up-circle me-2"></i>Upload and Install
-            </button>
-            
-            <div id="loading-indicator" class="htmx-indicator mt-3">
-              <div class="d-flex align-items-center">
-                <div class="spinner-border text-primary me-2" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-                <span>Uploading files...</span>
+            <div class="card-body">
+              <div class="mb-3">
+                <strong>Status:</strong> <span id="upgrade-status-text">Initializing...</span>
+              </div>
+              <div class="progress mb-3" style="height: 25px;">
+                <div id="upgrade-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                    role="progressbar" style="width: 0%;" 
+                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+              </div>
+              <div class="mb-3">
+                <strong>Message:</strong> <span id="upgrade-message">Preparing to install...</span>
+              </div>
+              <div id="reboot-section" class="mb-3" style="display:none;">
+                <!-- This will be populated when the upgrade is complete -->
+              </div>
+              <div class="mb-3">
+                <small class="text-muted">Time elapsed: <span id="time-elapsed">0s</span></small>
               </div>
             </div>
-          </form>
-        </div>
-
-        <!-- Upgrade Status -->
-        <div id="upgrade-status" class="mt-4">
-          <!-- This will be populated by the HTMX response -->
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<style>
-  .htmx-indicator {
-    display: none;
+<!-- HTMX-aware script for upgrade page -->
+<script>
+  // Function to initiate the upgrade process - directly attached to the button with onclick
+  function initiateUpgrade() {
+    console.log("Initiating upgrade process");
+    
+    // Get form data
+    const upgradeForm = document.getElementById('upgrade-form');
+    const formData = new FormData();
+    
+    // Get firmware file
+    const firmwareFile = document.getElementById('firmwareFile').files[0];
+    if (!firmwareFile) {
+      alert("Please select a firmware file");
+      return;
+    }
+    
+    console.log("Selected firmware file:", firmwareFile.name);
+    formData.append('firmware', firmwareFile);
+    
+    // Get config file (optional)
+    const configFile = document.getElementById('configFile').files[0];
+    if (configFile) {
+      console.log("Selected config file:", configFile.name);
+      formData.append('config', configFile);
+    }
+    
+    // Show progress section and hide info section
+    document.getElementById('upgrade-info-section').style.display = 'none';
+    document.getElementById('upgrade-progress-section').style.display = 'block';
+    
+    // Initialize progress tracking
+    let startTime = new Date();
+    let upgradeComplete = false;
+    
+    // Update status to uploading
+    updateUpgradeStatus('uploading', 0, 'Uploading files...');
+    
+    console.log("Sending upload request to /upload-firmware");
+    
+    // Upload the files
+    fetch('/upload-firmware', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => {
+	console.log("Received response:", response.status);
+	if (!response.ok) {
+          throw new Error('Upload failed: ' + response.statusText);
+	}
+	return response.json();
+      })
+      .then(data => {
+	console.log("Upload successful, installation started", data);
+	
+	// Start monitoring the installation progress
+	startProgressMonitoring(startTime);
+      })
+      .catch(error => {
+	console.error("Error during upload:", error);
+	updateUpgradeStatus('error', 0, 'Error: ' + error.message);
+      });
   }
-  .htmx-request .htmx-indicator {
-    display: block;
+  
+  // Function to monitor installation progress
+  function startProgressMonitoring(startTime) {
+    console.log("Starting progress monitoring");
+    
+    // Update elapsed time every second
+    const elapsedTimer = setInterval(() => {
+      const elapsed = Math.floor((new Date() - startTime) / 1000);
+      document.getElementById('time-elapsed').textContent = formatElapsedTime(elapsed);
+    }, 1000);
+    
+    // Poll for progress updates
+    const progressInterval = setInterval(() => {
+      console.log("Checking upgrade status");
+      
+      fetch('/upgrade-status')
+        .then(response => response.json())
+        .then(data => {
+          console.log("Status update:", data);
+          
+          // Update the UI with progress information
+          updateUpgradeStatus(
+            data.status, 
+            data.progress, 
+            data.message
+          );
+          
+          // Check if installation is complete
+          if (data.status === 'completed') {
+            console.log("Installation completed");
+            clearInterval(progressInterval);
+            clearInterval(elapsedTimer);
+            
+            // Show reboot button
+            const rebootSection = document.getElementById('reboot-section');
+            rebootSection.style.display = 'block';
+            rebootSection.innerHTML = `
+              <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Installation complete! Please reboot to apply changes.
+                <div class="mt-2">
+                  <button id="reboot-button" class="btn btn-success" onclick="initiateReboot()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Reboot System
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+          
+          // Check for errors
+          if (data.status === 'error') {
+            console.error("Installation error:", data.error);
+            clearInterval(progressInterval);
+            clearInterval(elapsedTimer);
+          }
+        })
+        .catch(error => {
+          console.error("Error checking progress:", error);
+          // Don't clear the interval - it might be a temporary connection issue
+        });
+    }, 2000); // Check every 2 seconds
   }
-  .htmx-request.htmx-indicator {
-    display: block;
+  
+  // Function to update the upgrade status UI
+  function updateUpgradeStatus(status, progress, message) {
+    console.log(`Updating status: ${status}, progress: ${progress}%, message: ${message}`);
+    
+    const progressBar = document.getElementById('upgrade-progress-bar');
+    const statusText = document.getElementById('upgrade-status-text');
+    const messageElem = document.getElementById('upgrade-message');
+    
+    // Update status text
+    statusText.textContent = capitalizeFirstLetter(status);
+    
+    // Update progress bar
+    progressBar.style.width = progress + '%';
+    progressBar.setAttribute('aria-valuenow', progress);
+    progressBar.textContent = Math.round(progress) + '%';
+    
+    // Update message
+    messageElem.textContent = message;
+    
+    // Special styling for completed status
+    if (status === 'completed') {
+      progressBar.classList.remove('progress-bar-animated');
+      progressBar.classList.add('bg-success');
+    } 
+    // Special styling for error status
+    else if (status === 'error') {
+      progressBar.classList.remove('progress-bar-animated');
+      progressBar.classList.add('bg-danger');
+    }
   }
-</style>
+  
+  // Function to initiate system reboot
+  function initiateReboot() {
+    console.log("Initiating system reboot");
+    
+    // Send reboot command to server
+    fetch('/reboot', {
+      method: 'POST'
+    })
+      .then(response => {
+	console.log("Reboot response:", response.status);
+	if (!response.ok) {
+          throw new Error('Reboot request failed');
+	}
+	
+	// Start the reconnection process
+	startRebootProcess();
+      })
+      .catch(error => {
+	console.error("Error during reboot:", error);
+	updateUpgradeStatus('error', 100, 'Error initiating reboot: ' + error.message);
+      });
+  }
+
+  // Function to handle reboot process and reconnection
+  function startRebootProcess() {
+    console.log("Starting reboot process monitoring");
+    
+    // Show reboot in progress UI
+    const rebootSection = document.getElementById('reboot-section');
+    rebootSection.innerHTML = `
+      <div class="alert alert-info">
+        <i class="bi bi-arrow-clockwise me-2"></i>
+        <strong>Rebooting...</strong> The system is rebooting. Please wait.
+      </div>
+      <div class="progress mb-3" style="height: 25px;">
+        <div id="reboot-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+             role="progressbar" style="width: 0%;" 
+             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">Rebooting...</div>
+      </div>
+      <div id="reboot-status" class="mb-3">
+        Preparing to reboot the device...
+      </div>
+      <div id="reconnect-status" class="alert alert-warning" style="display:none;">
+        <i class="bi bi-wifi me-2"></i>
+        <span id="reconnect-message">Waiting to reconnect...</span>
+      </div>
+    `;
+    
+    // Countdown timer and reconnection variables
+    let secondsElapsed = 0;
+    const totalTime = 60; // Total time to count in seconds
+    const reconnectDelay = 15; // Seconds to wait before attempting reconnection
+    const reconnectInterval = 2; // Seconds between reconnection attempts
+    let reconnecting = false;
+    let reconnectAttempts = 0;
+    
+    // Get UI elements
+    const progressBar = document.getElementById('reboot-progress-bar');
+    const statusText = document.getElementById('reboot-status');
+    const reconnectStatus = document.getElementById('reconnect-status');
+    const reconnectMessage = document.getElementById('reconnect-message');
+    
+    // Update the progress bar and attempt to reconnect
+    const timer = setInterval(function() {
+      secondsElapsed++;
+      const progressPercent = (secondsElapsed / totalTime) * 100;
+      
+      console.log("Reboot timer tick: " + secondsElapsed + "s, progress: " + progressPercent.toFixed(0) + "%");
+      
+      // Update progress bar
+      progressBar.style.width = progressPercent + '%';
+      progressBar.setAttribute('aria-valuenow', progressPercent);
+      
+      // Update status text based on elapsed time
+      if (secondsElapsed < reconnectDelay) {
+        // Still in reboot phase
+        statusText.textContent = 'Device is rebooting... Please wait. (' + secondsElapsed + 's)';
+        progressBar.textContent = 'Rebooting... ' + Math.round(progressPercent) + '%';
+      } else if (!reconnecting) {
+        // Start reconnection phase
+        reconnecting = true;
+        reconnectStatus.style.display = 'block';
+        statusText.textContent = 'Attempting to reconnect to the device...';
+        progressBar.textContent = 'Reconnecting... ' + Math.round(progressPercent) + '%';
+      }
+      
+      // After reconnect delay, try to reconnect every interval
+      if (reconnecting && (secondsElapsed - reconnectDelay) % reconnectInterval === 0) {
+        reconnectAttempts++;
+        tryReconnect(reconnectAttempts);
+      }
+      
+      // Stop the timer after the total time
+      if (secondsElapsed >= totalTime) {
+        clearInterval(timer);
+        statusText.textContent = 'Reboot should be complete. If you cannot reconnect automatically, try refreshing the page.';
+        reconnectMessage.textContent = 'Reconnection attempts completed. Please try manually refreshing the page.';
+      }
+    }, 1000);
+    
+    // Function to attempt reconnection
+    function tryReconnect(attemptNum) {
+      reconnectMessage.textContent = 'Reconnection attempt ' + attemptNum + '...';
+      console.log("Trying to reconnect after reboot, attempt #" + attemptNum);
+      
+      // Try to fetch the status page to check if the device is back online
+      fetch('/status', { 
+        method: 'GET',
+        headers: { 'Cache-Control': 'no-cache' },
+        cache: 'no-store'
+      })
+	.then(response => {
+          if (response.ok) {
+            console.log("Reconnection successful!");
+            // Device is back online
+            clearInterval(timer);
+            
+            // Update UI to show successful reconnection
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('bg-info');
+            progressBar.classList.add('bg-success');
+            progressBar.textContent = 'Connected!';
+            
+            statusText.textContent = 'Reboot complete! The device is now accessible.';
+            
+            reconnectStatus.classList.remove('alert-warning');
+            reconnectStatus.classList.add('alert-success');
+            reconnectMessage.textContent = 'Successfully reconnected to the device!';
+            
+            // Redirect to status page after a short delay
+            setTimeout(() => {
+              window.location.href = '/status';
+            }, 2000);
+          }
+	})
+	.catch(error => {
+          // Device still not accessible, continue waiting
+          console.log('Reconnection attempt failed, will retry...');
+	});
+    }
+  }
+  
+  // Helper function to format elapsed time
+  function formatElapsedTime(seconds) {
+    if (seconds < 60) {
+      return seconds + 's';
+    }
+    
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return minutes + 'm ' + remainingSeconds + 's';
+  }
+  
+  // Helper function to capitalize first letter
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+</script>
 {{ end }}
+
