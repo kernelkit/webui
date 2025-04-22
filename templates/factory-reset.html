@@ -1,0 +1,216 @@
+{{ define "content" }}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4>Factory Reset</h4>
+      </div>
+      <div class="card-body">
+        <!-- Warning and Information Section -->
+        <div id="reset-info-section">
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Warning:</strong> Factory Reset will restore the device to its factory default settings. All custom configurations will be lost and the device will reboot.
+          </div>
+          
+          <div class="mb-4">
+            <h5>Reset Information</h5>
+            <p>When you perform a factory reset:</p>
+            <ul>
+              <li>All custom configuration settings will be erased</li>
+              <li>Network settings will be reset to factory defaults</li>
+              <li>The device will automatically reboot to apply changes</li>
+              <li>You may lose connectivity to the device temporarily</li>
+            </ul>
+            <p>The device should be accessible again after the reboot process completes, typically within 60 seconds.</p>
+          </div>
+          
+          <div class="mb-4" id="reset-controls">
+            <h5>Confirm Factory Reset</h5>
+            <p>Please confirm that you want to restore factory settings:</p>
+            
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="confirm-reset">
+              <label class="form-check-label" for="confirm-reset">
+                I understand that this will reset all settings and reboot the device
+              </label>
+            </div>
+            
+            <button id="reset-button" class="btn btn-danger" disabled>
+              <i class="bi bi-arrow-counterclockwise me-2"></i>Perform Factory Reset
+            </button>
+          </div>
+        </div>
+        
+        <!-- Reset Progress Section (Hidden Initially) -->
+        <div id="reset-progress-section" style="display:none;">
+          <h5>Reset in Progress</h5>
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Factory reset initiated. The device will reboot to apply changes.
+          </div>
+          
+          <div class="progress mb-3" style="height: 25px;">
+            <div id="reset-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                 role="progressbar" style="width: 0%;" 
+                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">Initializing...</div>
+          </div>
+          
+          <div id="reset-status" class="mb-3">
+            Preparing to reset the device...
+          </div>
+          
+          <div id="reconnect-status" class="alert alert-warning" style="display:none;">
+            <i class="bi bi-wifi me-2"></i>
+            <span id="reconnect-message">Waiting to reconnect...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Enable/disable the reset button based on checkbox
+  document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirm-reset');
+    const resetButton = document.getElementById('reset-button');
+    
+    confirmCheckbox.addEventListener('change', function() {
+      resetButton.disabled = !this.checked;
+      console.log("Checkbox changed, button disabled:", resetButton.disabled);
+    });
+    
+    // Set up click handler for reset button
+    resetButton.addEventListener('click', function() {
+      initiateFactoryReset();
+    });
+  });
+  
+  // Function to initiate factory reset
+  function initiateFactoryReset() {
+    console.log("Factory reset initiated");
+    
+    // Show the progress section and hide the info section
+    document.getElementById('reset-info-section').style.display = 'none';
+    document.getElementById('reset-progress-section').style.display = 'block';
+    
+    // Start the countdown and progress indication
+    startResetProgress();
+    
+    // Send the factory reset command to the server
+    fetch('/factory-reset/execute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      }
+    })
+      .then(response => {
+	console.log('Factory reset command sent successfully');
+      })
+      .catch(error => {
+	// This may happen if the device starts rebooting quickly
+	console.log('Connection lost or reset already in progress');
+      });
+  }
+  
+  // Function to handle reset progress and reconnection
+  function startResetProgress() {
+    console.log("Starting reset progress tracking");
+    
+    // Variables for progress tracking
+    let secondsElapsed = 0;
+    const totalTime = 60; // Total time to count in seconds
+    const reconnectDelay = 15; // Seconds to wait before attempting reconnection
+    const reconnectInterval = 2; // Seconds between reconnection attempts
+    let reconnecting = false;
+    let reconnectAttempts = 0;
+    
+    // Elements for updating
+    const progressBar = document.getElementById('reset-progress-bar');
+    const statusText = document.getElementById('reset-status');
+    const reconnectStatus = document.getElementById('reconnect-status');
+    const reconnectMessage = document.getElementById('reconnect-message');
+    
+    // Update the progress bar and attempt to reconnect
+    const timer = setInterval(function() {
+      secondsElapsed++;
+      const progressPercent = (secondsElapsed / totalTime) * 100;
+      
+      console.log("Timer tick: " + secondsElapsed + "s, progress: " + progressPercent.toFixed(0) + "%");
+      
+      // Update progress bar
+      progressBar.style.width = progressPercent + '%';
+      progressBar.setAttribute('aria-valuenow', progressPercent);
+      
+      // Update status text based on elapsed time
+      if (secondsElapsed < reconnectDelay) {
+        // Still in reset/reboot phase
+        statusText.textContent = 'Device is resetting... Please wait. (' + secondsElapsed + 's)';
+        progressBar.textContent = 'Resetting... ' + Math.round(progressPercent) + '%';
+      } else if (!reconnecting) {
+        // Start reconnection phase
+        reconnecting = true;
+        reconnectStatus.style.display = 'block';
+        statusText.textContent = 'Attempting to reconnect to the device...';
+        progressBar.textContent = 'Reconnecting... ' + Math.round(progressPercent) + '%';
+      }
+      
+      // After reconnect delay, try to reconnect every interval
+      if (reconnecting && (secondsElapsed - reconnectDelay) % reconnectInterval === 0) {
+        reconnectAttempts++;
+        tryReconnect(reconnectAttempts);
+      }
+      
+      // Stop the timer after the total time
+      if (secondsElapsed >= totalTime) {
+        clearInterval(timer);
+        statusText.textContent = 'Reset should be complete. If you cannot reconnect automatically, try refreshing the page.';
+        reconnectMessage.textContent = 'Reconnection attempts completed. Please try manually refreshing the page.';
+      }
+    }, 1000);
+    
+    // Function to attempt reconnection
+    function tryReconnect(attemptNum) {
+      reconnectMessage.textContent = 'Reconnection attempt ' + attemptNum + '...';
+      console.log("Trying to reconnect, attempt #" + attemptNum);
+      
+      // Try to fetch the status page to check if the device is back online
+      fetch('/status', { 
+        method: 'GET',
+        headers: { 'Cache-Control': 'no-cache' },
+        // Add a random parameter to avoid cache
+        cache: 'no-store'
+      })
+	.then(response => {
+          if (response.ok) {
+            console.log("Reconnection successful!");
+            // Device is back online
+            clearInterval(timer);
+            
+            // Update UI to show successful reconnection
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('bg-info');
+            progressBar.classList.add('bg-success');
+            progressBar.textContent = 'Connected!';
+            
+            statusText.textContent = 'Reset complete! The device is now accessible.';
+            
+            reconnectStatus.classList.remove('alert-warning');
+            reconnectStatus.classList.add('alert-success');
+            reconnectMessage.textContent = 'Successfully reconnected to the device!';
+            
+            // Redirect to status page after a short delay
+            setTimeout(() => {
+              window.location.href = '/status';
+            }, 2000);
+          }
+	})
+	.catch(error => {
+          // Device still not accessible, continue waiting
+          console.log('Reconnection attempt failed, will retry...');
+	});
+    }
+  }
+</script>
+{{ end }}

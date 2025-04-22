@@ -90,6 +90,8 @@ func main() {
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware)
+		r.Get("/factory-reset", factoryResetHandler)
+		r.Post("/factory-reset/execute", factoryResetExecuteHandler)
 		r.Get("/logout", logoutHandler)
 		r.Get("/status", statusHandler)
 		r.Get("/manual", manualHandler)
