@@ -1,0 +1,105 @@
+{{ define "content" }}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4>System Upgrade</h4>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Warning:</strong> Do not power off the device during the upgrade process. 
+          The system will automatically reboot when the upgrade is complete.
+        </div>
+
+        <!-- Current Firmware Information -->
+        <div class="mb-4">
+          <h5>Current Firmware Information</h5>
+          <table class="table table-sm">
+            <tbody>
+              <tr>
+                <th scope="row" style="width: 30%;">Firmware Version:</th>
+                <td>{{ .FirmwareVersion }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Build Date:</th>
+                <td>{{ .BuildDate }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Active Bootslot:</th>
+                <td>{{ .ActiveBootslot }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Backup Configuration -->
+        <div class="mb-4">
+          <h5>Backup Current Configuration</h5>
+          <p>Download your current system configuration before upgrading.</p>
+          <a href="/download-config" 
+             class="btn btn-outline-primary"
+             hx-boost="false"
+             target="_blank">
+            <i class="bi bi-download me-2"></i>Download Configuration
+          </a>
+        </div>
+
+        <!-- Upload Firmware -->
+        <div class="mb-4">
+          <h5>Upload New Firmware</h5>
+          <form id="upgrade-form" 
+                hx-post="/upload-firmware" 
+                hx-encoding="multipart/form-data"
+                hx-target="#upgrade-status"
+                hx-swap="innerHTML"
+                hx-indicator="#loading-indicator">
+            
+            <div class="mb-3">
+              <label for="firmwareFile" class="form-label">Firmware Package (.pkg file)</label>
+              <input class="form-control" type="file" id="firmwareFile" name="firmware" accept=".pkg" required>
+              <div class="form-text">Select the firmware package file (.pkg) to install.</div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="configFile" class="form-label">Configuration File (optional)</label>
+              <input class="form-control" type="file" id="configFile" name="config" accept=".cfg">
+              <div class="form-text">Optionally upload a previously backed-up configuration file.</div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-arrow-up-circle me-2"></i>Upload and Install
+            </button>
+            
+            <div id="loading-indicator" class="htmx-indicator mt-3">
+              <div class="d-flex align-items-center">
+                <div class="spinner-border text-primary me-2" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <span>Uploading files...</span>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Upgrade Status -->
+        <div id="upgrade-status" class="mt-4">
+          <!-- This will be populated by the HTMX response -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .htmx-indicator {
+    display: none;
+  }
+  .htmx-request .htmx-indicator {
+    display: block;
+  }
+  .htmx-request.htmx-indicator {
+    display: block;
+  }
+</style>
+{{ end }}

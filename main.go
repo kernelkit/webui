@@ -97,6 +97,11 @@ func main() {
 		r.Get("/network", networkHandler)
 		r.Get("/log", logHandler)
 		r.Get("/tail-log", tailLogHandler)
+		r.Get("/upgrade", upgradeHandler)
+		r.Get("/download-config", downloadConfigHandler)
+		r.Post("/upload-firmware", uploadFirmwareHandler)
+		r.Get("/upgrade-status", upgradeStatusHandler)
+		r.Post("/reboot", rebootHandler)
 	})
 
 	// Only localhost, use nginx or similar to access
