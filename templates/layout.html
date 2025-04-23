@@ -449,42 +449,27 @@
     </div><!-- container-xxl -->
 
     <script src="/assets/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Session keep-alive with HTMX -->
-    <div hx-get="/keepalive" 
-         hx-trigger="every 5m"
-         hx-swap="none">
-    </div>
-    
+
     <!-- Auto-logout after inactivity -->
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        let timeoutId;
-        let lastKeepAlive = Date.now();
-        
-        function resetTimer() {
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
+	let timeoutId;
+
+	function resetTimer() {
+	  clearTimeout(timeoutId);
+	  timeoutId = setTimeout(() => {
             window.location.href = '/logout';
-          }, 600000); // 10 minutes
-          
-          // Call keepalive only if more than 60 seconds have passed
-          if (Date.now() - lastKeepAlive > 60000) {
-            fetch('/keepalive')
-              .then(response => console.log("Session kept alive"))
-              .catch(error => console.error("Error keeping session alive:", error));
-            lastKeepAlive = Date.now();
-          }
-        }
-        
-        // Reset timer on user activity
-        window.onload = resetTimer;
-        window.onmousemove = resetTimer;
-        window.onmousedown = resetTimer;
-        window.ontouchstart = resetTimer;
-        window.onclick = resetTimer;
-        window.onkeypress = resetTimer;
-        window.addEventListener('scroll', resetTimer, true);
+	  }, 900000); // 15 minutes
+	}
+
+	// Reset timer on user activity
+	window.onload = resetTimer;
+	window.onmousemove = resetTimer;
+	window.onmousedown = resetTimer;
+	window.ontouchstart = resetTimer;
+	window.onclick = resetTimer;
+	window.onkeypress = resetTimer;
+	window.addEventListener('scroll', resetTimer, true);
       });
     </script>
 
