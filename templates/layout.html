@@ -558,5 +558,35 @@
 	updateActiveThemeButton(storedTheme);
       });
     </script>
+
+    <!-- Confirm Factory Reset Logic -->
+    <script>
+      // htmx.logAll();
+
+      document.addEventListener('htmx:afterSwap', function (event) {
+	// Check if the swapped content includes the Factory Reset section
+	if (event.detail.target && event.detail.target.contains(document.getElementById('confirm-reset'))) {
+	  initializeFactoryResetControls();
+	}
+      });
+
+      function initializeFactoryResetControls() {
+	const confirmCheckbox = document.getElementById('confirm-reset');
+	const resetButton = document.getElementById('reset-button');
+
+	if (confirmCheckbox && resetButton) {
+	  confirmCheckbox.addEventListener('change', function () {
+	    resetButton.disabled = !this.checked;
+	    console.log("Checkbox changed, button disabled:", resetButton.disabled);
+	  });
+
+	  resetButton.addEventListener('click', function () {
+	    initiateFactoryReset();
+	  });
+
+	  console.log("Factory Reset controls initialized.");
+	}
+      }
+    </script>
   </body>
 </html>

@@ -71,22 +71,6 @@
 </div>
 
 <script>
-  // Enable/disable the reset button based on checkbox
-  document.addEventListener('DOMContentLoaded', function() {
-    const confirmCheckbox = document.getElementById('confirm-reset');
-    const resetButton = document.getElementById('reset-button');
-    
-    confirmCheckbox.addEventListener('change', function() {
-      resetButton.disabled = !this.checked;
-      console.log("Checkbox changed, button disabled:", resetButton.disabled);
-    });
-    
-    // Set up click handler for reset button
-    resetButton.addEventListener('click', function() {
-      initiateFactoryReset();
-    });
-  });
-  
   // Function to initiate factory reset
   function initiateFactoryReset() {
     console.log("Factory reset initiated");
