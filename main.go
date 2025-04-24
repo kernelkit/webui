@@ -43,13 +43,20 @@ var (
 	port       int
 	debug      bool
 	secretPath string
+	staticPath string
 )
 
 func main() {
 	pflag.IntVarP(&port, "port", "p", 8080, "HTTP listening port, default: 8080")
 	pflag.BoolVarP(&debug, "debug", "d", false, "Enable debug mode (allows admin/admin login)")
-	pflag.StringVarP(&sessionPath, "secret", "s", "/var/lib/misc/", "Directory for session secret")
+	pflag.StringVarP(&sessionPath, "secret", "s", "/var/lib/misc", "Directory for session secret")
+	pflag.StringVarP(&staticPath, "assets", "a", "/usr/share/webui", "Directory for static files")
 	pflag.Parse()
+
+	if err := verifyDirs(); err != nil {
+		log.Println("Check the --assets path argument.")
+		os.Exit(1)
+	}
 
 	if debug {
 		log.Println("WARNING: Debug mode enabled - insecure authentication is active")
@@ -105,10 +112,27 @@ func main() {
 	log.Fatal(http.ListenAndServe(listenAddr, r))
 }
 
+func verifyDirs() error {
+	requiredDirs := []string{"assets", "templates"}
+
+	for _, dir := range requiredDirs {
+		path := filepath.Join(staticPath, dir)
+
+		_, err := os.Stat(path)
+		if err != nil {
+			log.Printf("WARNING: required directory '%s' missing!", path)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func loadTemplates() error {
 	templates = make(map[string]*template.Template)
 
-	tmplFiles, err := os.ReadDir("templates")
+	dir := filepath.Join(staticPath, "templates")
+	tmplFiles, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
