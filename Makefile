@@ -9,7 +9,7 @@ BINDIR     := $(PREFIX)/bin
 SHAREDIR   := $(PREFIX)/share/$(BIN)
 
 build:
-	go build $(LDFLAGS) -o $(BIN)
+	go build -C src/ $(LDFLAGS) -o $(BIN)
 
 clean:
 	rm -f $(BIN)
@@ -18,13 +18,13 @@ distclean: clean
 	rm -f templates/*~ *~
 
 run:
-	go run *.go -d -a . -s /tmp
+	go run src/*.go -d -a . -s /tmp
 
 install: build
 	install -d $(DESTDIR)$(BINDIR)
 	install -d $(DESTDIR)$(SHAREDIR)/assets
 	install -d $(DESTDIR)$(SHAREDIR)/templates
-	install -m 755 $(BIN) $(DESTDIR)$(BINDIR)/
+	install -m 755 src/$(BIN) $(DESTDIR)$(BINDIR)/
 	cp -r assets/* $(DESTDIR)$(SHAREDIR)/assets/
 	cp -r templates/* $(DESTDIR)$(SHAREDIR)/templates/
 	@echo "Installation complete."
