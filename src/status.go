@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	//	ly "github.com/mattiaswal/go-libyang/libyang"
+	sr "github.com/mattiaswal/go-sysrepo/sysrepo"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
@@ -61,7 +63,18 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 // getSystemInfo gathers system information
 func getSystemInfo() (*SystemInfo, error) {
 	// Get hostname
-	hostname, err := os.Hostname()
+	conn, err := sr.Connect(sr.ConnDefault)
+	if err != nil {
+		log.Fatalf("Failed to connect to sysrepo: %v", err)
+	}
+	defer conn.Close()
+	sess, err := conn.SessionStart(sr.DSOperational)
+	if err != nil {
+		log.Fatalf("Failed to start session: %v", err)
+	}
+	defer sess.Close()
+	path := "/ietf-system:system/hostname"
+	hostname, err := sess.GetItem(path)
 	if err != nil {
 		hostname = "Unknown"
 	}
