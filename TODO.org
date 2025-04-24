@@ -6,7 +6,7 @@ This is the same issue that was seen and fixed during development of the
 upgrade page.
 
 * TODO Investigate JSON Web Token again
-* TODO Adjust spacing around logo, too crowded
+* DONE Adjust spacing around logo, too crowded
 * TODO Add backend support for https://github.com/mattiaswal/go-sysrepo/
 * DONE After embed is dropped, relocate go files to src/
 * TODO Prototype plugin support for custom/vendor pages w/ backend
