@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/rand"
-	"embed"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -20,12 +19,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/spf13/pflag"
 )
-
-//go:embed assets
-var assetFS embed.FS
-
-//go:embed templates
-var templateFS embed.FS
 
 var (
 	sessionSecret string
@@ -75,8 +68,8 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	// Serve static files (for favicon.ico and other assets)
-	fileServer := http.FileServer(http.FS(assetFS))
-	r.Handle("/assets/*", http.StripPrefix("/", fileServer))
+	fs := http.FileServer(http.Dir("assets/"))
+	r.Handle("/assets/*", http.StripPrefix("/assets/", fs))
 
 	// Public routes
 	r.Group(func(r chi.Router) {
@@ -115,12 +108,12 @@ func main() {
 func loadTemplates() error {
 	templates = make(map[string]*template.Template)
 
-	tmplFiles, err := templateFS.ReadDir("templates")
+	tmplFiles, err := os.ReadDir("templates")
 	if err != nil {
 		return err
 	}
 
-	layoutContent, err := templateFS.ReadFile("templates/layout.html")
+	layoutContent, err := os.ReadFile("templates/layout.html")
 	if err != nil {
 		return err
 	}
@@ -140,7 +133,7 @@ func loadTemplates() error {
 			continue
 		}
 
-		content, err := templateFS.ReadFile("templates/" + fileName)
+		content, err := os.ReadFile("templates/" + fileName)
 		if err != nil {
 			return err
 		}

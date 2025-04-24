@@ -1,4 +1,4 @@
-* TODO Drop embed, we want to be able to override files at build (branding)
+* DONE Drop embed, we want to be able to override files at build (branding)
 * DONE Drop keepalive?  Remnant from v1, should not be needed anymore
 * DONE Fix issue on factory reset page, button not always working
 
