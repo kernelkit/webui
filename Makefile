@@ -3,11 +3,13 @@ BUILD_TIME := $(shell date +%FT%T%z)
 LDFLAGS    := -ldflags "-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
 BIN        := webui
 
+# Define installation directories with configurable prefix
+PREFIX     ?= /usr
+BINDIR     := $(PREFIX)/bin
+SHAREDIR   := $(PREFIX)/share/$(BIN)
+
 build:
 	go build $(LDFLAGS) -o $(BIN)
-
-run:
-	go run *.go
 
 clean:
 	rm -f $(BIN)
@@ -15,24 +17,40 @@ clean:
 distclean: clean
 	rm -f templates/*~ *~
 
-dev:
-	go run *.go -d -s /tmp
+run:
+	go run *.go -d -a . -s /tmp
 
 install: build
-	install -m 755 $(BIN) /usr/local/bin/
-	mkdir -p /var/lib/misc
+	install -d $(DESTDIR)$(BINDIR)
+	install -d $(DESTDIR)$(SHAREDIR)/assets
+	install -d $(DESTDIR)$(SHAREDIR)/templates
+	install -m 755 $(BIN) $(DESTDIR)$(BINDIR)/
+	cp -r assets/* $(DESTDIR)$(SHAREDIR)/assets/
+	cp -r templates/* $(DESTDIR)$(SHAREDIR)/templates/
 	@echo "Installation complete."
-	@echo "The application is now available at /usr/local/bin/$(BIN)"
+	@echo "The application is now available at $(BINDIR)/$(BIN)"
+	@echo "All static files have been installed in $(SHAREDIR)/"
+
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/$(BIN)
+	rm -rf $(DESTDIR)$(SHAREDIR)
+	@echo "Uninstallation complete."
 
 help:
 	@echo "Infix Web GUI Makefile"
 	@echo ""
 	@echo "Targets:"
 	@echo "  build      - Build the application"
-	@echo "  run        - Run the application"
-	@echo "  dev        - Run in development mode"
+	@echo "  run        - Run application in debug mode"
 	@echo "  clean      - Remove build artifacts"
-	@echo "  install    - Install to /usr/local/bin"
+	@echo "  distclean  - Remove build artifacts and backup files"
+	@echo "  install    - Install application"
+	@echo "  uninstall  - Uninstall application"
 	@echo "  help       - Display this help message"
+	@echo ""
+	@echo "Variables:"
+	@echo "  PREFIX     - Installation prefix (default: $(PREFIX))"
+	@echo "  DESTDIR    - Destination directory for staged installs"
+	@echo "              Example: make DESTDIR=/tmp/stage install"
 
-.PHONY: build run clean test dev install
+.PHONY: build run clean distclean install uninstall help
