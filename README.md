@@ -13,17 +13,14 @@ Currently you need at least Go 1.21.  Remember to fetch all deps first:
 $ go mod tidy
 ```
 
-Then you can run the program:
+Then you can run the program in developer/debug mode:
 
 ```bash
 $ make run
 ```
 
-or developer/debug mode:
-
-```bash
-$ make dev
-```
+It is also possible to `make install` the program, by default to
+`/usr/bin` with all its static files in `/usr/share/webui`.
 
 
 Screenshots
